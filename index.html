@@ -1,80 +1,177 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <!-- Meta tags for character set and responsive design -->
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Arithmetic Flash Cards</title>
+    
+    <!-- External library for confetti effect -->
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
+    
     <style>
         /* --- Core Styles & Theme Variables --- */
         :root {
-            --light-bg: #f0f2f5; --dark-bg: #18191a;
-            --light-card-bg: #ffffff; --dark-card-bg: #242526;
-            --light-text: #1c1e21; --dark-text: #e4e6eb;
-            --light-gray-text: #606770; --dark-gray-text: #b0b3b8;
-            --light-border: #dddfe2; --dark-border: #3a3b3c;
-            --light-option-bg: #e7f3ff; --dark-option-bg: #3a3b3c;
-            --light-hover-bg: #e9ebee; --dark-hover-bg: #4e4f50;
+            /* Color palette for light and dark themes */
+            --light-bg: #f0f2f5;
+            --dark-bg: #18191a;
+            --light-card-bg: #ffffff;
+            --dark-card-bg: #242526;
+            --light-text: #1c1e21;
+            --dark-text: #e4e6eb;
+            --light-gray-text: #606770;
+            --dark-gray-text: #b0b3b8;
+            --light-border: #dddfe2;
+            --dark-border: #3a3b3c;
+            --light-option-bg: #e7f3ff;
+            --dark-option-bg: #3a3b3c;
+            --light-hover-bg: #e9ebee;
+            --dark-hover-bg: #4e4f50;
             
-            --primary-color: #0866ff; --green-color: #31a24c; --red-color: #e41e3f;
-            --shadow: 0 4px 12px rgba(0, 0, 0, 0.1); --dark-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            /* Action colors and shadows */
+            --primary-color: #0866ff;
+            --green-color: #31a24c;
+            --red-color: #e41e3f;
+            --shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            --dark-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
         }
-        
-	@media (max-width: 768px) {
-    .header-panel { 
-        position: relative; 
-        top: auto; 
-        right: auto; 
-        width: 100%; 
-        margin-bottom: 20px; 
-    }
-    .stats-panel, .theme-switcher {
-        width: 100%;
-    }
-}
+
+        /* --- Theme Definitions --- */
         body.light-theme {
-            --bg-color: var(--light-bg); --card-bg: var(--light-card-bg); --text-color: var(--light-text);
-            --gray-text: var(--light-gray-text); --border-color: var(--light-border); --option-bg: var(--light-option-bg);
-            --hover-bg: var(--light-hover-bg); --current-shadow: var(--shadow);
+            --bg-color: var(--light-bg);
+            --card-bg: var(--light-card-bg);
+            --text-color: var(--light-text);
+            --gray-text: var(--light-gray-text);
+            --border-color: var(--light-border);
+            --option-bg: var(--light-option-bg);
+            --hover-bg: var(--light-hover-bg);
+            --current-shadow: var(--shadow);
         }
 
         body.dark-theme {
-            --bg-color: var(--dark-bg); --card-bg: var(--dark-card-bg); --text-color: var(--dark-text);
-            --gray-text: var(--dark-gray-text); --border-color: var(--dark-border); --option-bg: var(--dark-option-bg);
-            --hover-bg: var(--dark-hover-bg); --current-shadow: var(--dark-shadow);
+            --bg-color: var(--dark-bg);
+            --card-bg: var(--dark-card-bg);
+            --text-color: var(--dark-text);
+            --gray-text: var(--dark-gray-text);
+            --border-color: var(--dark-border);
+            --option-bg: var(--dark-option-bg);
+            --hover-bg: var(--dark-hover-bg);
+            --current-shadow: var(--dark-shadow);
         }
 
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        /* --- Base Styles & Animations --- */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            background-color: var(--bg-color); color: var(--text-color); margin: 0; padding: 20px;
-            display: flex; flex-direction: column; align-items: center; justify-content: space-between;
-            min-height: 100vh; box-sizing: border-box; transition: background-color 0.3s, color 0.3s;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-between;
+            min-height: 100vh;
+            box-sizing: border-box;
+            transition: background-color 0.3s, color 0.3s;
         }
 
-        /* --- Header & Stats --- */
+        /* --- Donate Banner --- */
+        .donate-banner {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.9rem;
+            color: var(--gray-text);
+            z-index: 100;
+        }
+        .donate-banner img {
+            height: 22px;
+            width: auto;
+            opacity: 0.85;
+            transition: opacity 0.2s ease;
+        }
+        .donate-banner img:hover {
+            opacity: 1;
+        }
+
+        /* --- Header & Stats Panel --- */
         .header-panel {
-            position: absolute; top: 20px; right: 20px; display: flex;
-            flex-direction: column; gap: 15px; width: 240px; z-index: 10;
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            width: 240px;
+            z-index: 10;
         }
-        .stats-panel, .theme-switcher {
-            background: var(--card-bg); padding: 15px 25px; border-radius: 12px;
-            box-shadow: var(--current-shadow); border: 1px solid var(--border-color);
-            animation: fadeIn 0.5s ease-out; transition: background-color 0.3s, border-color 0.3s;
+        .stats-panel,
+        .theme-switcher {
+            background: var(--card-bg);
+            padding: 15px 25px;
+            border-radius: 12px;
+            box-shadow: var(--current-shadow);
+            border: 1px solid var(--border-color);
+            animation: fadeIn 0.5s ease-out;
+            transition: background-color 0.3s, border-color 0.3s;
         }
-        .stats-panel h2 { margin: 0 0 15px 0; font-size: 1.2rem; text-align: center; border-bottom: 1px solid var(--border-color); padding-bottom: 10px; }
-        .stat-item { display: flex; justify-content: space-between; font-size: 0.95rem; margin-bottom: 8px; }
+        .stats-panel h2 {
+            margin: 0 0 15px 0;
+            font-size: 1.2rem;
+            text-align: center;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 10px;
+        }
+        .stat-item {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.95rem;
+            margin-bottom: 8px;
+        }
         .stat-item span:first-child { color: var(--gray-text); }
         .stat-item span:last-child { font-weight: 600; }
-        .theme-switcher select { width: 100%; padding: 8px; border-radius: 6px; border: 1px solid var(--border-color); background-color: var(--bg-color); color: var(--text-color); font-size: 0.9rem; }
-
-        .main-container {
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-            width: 100%; flex-grow: 1; padding-top: 50px; /* Space on mobile */
+        .theme-switcher select {
+            width: 100%;
+            padding: 8px;
+            border-radius: 6px;
+            border: 1px solid var(--border-color);
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-size: 0.9rem;
         }
 
-        /* --- Progress Bar --- */
+        /* --- Main Content Container --- */
+        .main-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            flex-grow: 1;
+            padding-top: 50px;
+        }
+
+        /* --- Progress Bar & Info --- */
+        .progress-info {
+            font-size: 0.95rem;
+            font-weight: 500;
+            color: var(--gray-text);
+            margin-bottom: 6px;
+            visibility: hidden; /* Hidden until a session starts */
+            text-align: center;
+        }
+        .progress-info.active {
+            visibility: visible;
+            animation: fadeIn 0.4s ease-out;
+        }
         .progress-bar-container {
             width: clamp(300px, 75vw, 600px);
             height: 8px;
@@ -82,7 +179,7 @@
             border-radius: 4px;
             margin-bottom: 10px;
             overflow: hidden;
-            visibility: hidden; /* Hidden by default */
+            visibility: hidden; /* Hidden until a session starts */
         }
         .progress-bar {
             width: 0%;
@@ -92,148 +189,267 @@
             transition: width 0.3s ease-in-out;
         }
 
-        /* --- Flash Card --- */
+        /* --- Flash Card Styling --- */
         .card-container {
-            width: clamp(300px, 75vw, 600px); height: clamp(200px, 40vh, 350px);
-            perspective: 1000px; margin-bottom: 20px;
+            width: clamp(300px, 75vw, 600px);
+            height: clamp(200px, 40vh, 350px);
+            perspective: 1000px; /* For 3D flip effect */
+            margin-bottom: 20px;
         }
-        .card { 
-            width: 100%; height: 100%; position: relative; transform-style: preserve-3d; 
-            transition: transform 0.6s; box-shadow: var(--current-shadow); border-radius: 18px; 
+        .card {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            transform-style: preserve-3d;
+            transition: transform 0.6s;
+            box-shadow: var(--current-shadow);
+            border-radius: 18px;
         }
-        .card.is-flipped { transform: rotateY(180deg); }
-        
+        .card.is-flipped {
+            transform: rotateY(180deg);
+        }
         .card-face {
-            position: absolute; width: 100%; height: 100%; backface-visibility: hidden; border-radius: 18px;
-            display: flex; flex-direction: column; justify-content: center; align-items: center;
-            padding: 20px; box-sizing: border-box; border: 1px solid var(--border-color);
-            background-color: var(--card-bg); transition: background-color 0.3s, border-color 0.3s;
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden; /* Hides the back of the element when flipped */
+            border-radius: 18px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            box-sizing: border-box;
+            border: 1px solid var(--border-color);
+            background-color: var(--card-bg);
+            transition: background-color 0.3s, border-color 0.3s;
         }
-        
-        .card-back { transform: rotateY(180deg); }
-        
+        .card-back {
+            transform: rotateY(180deg);
+        }
         .card-label {
-            font-size: 1rem; font-weight: 600; color: var(--gray-text);
-            position: absolute; top: 20px;
-            opacity: 0; transition: opacity 0.3s;
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--gray-text);
+            position: absolute;
+            top: 20px;
+            opacity: 0; /* Hidden by default */
+            transition: opacity 0.3s;
         }
         .card.in-session .card-label {
-            opacity: 1; /* Show labels only when session starts */
+            opacity: 1; /* Shows "Problem" and "Answer" labels during a session */
         }
-        
         .card-content {
-            font-size: clamp(3rem, 12vw, 6rem); font-weight: bold;
-            line-height: 1.2; text-align: center; max-width: 90%;
+            font-size: clamp(3rem, 12vw, 6rem);
+            font-weight: bold;
+            line-height: 1.2;
+            text-align: center;
+            max-width: 90%;
             transition: font-size 0.3s ease;
         }
-        .card-back .card-content { color: var(--primary-color); }
-        
-        .initial-card-text { 
-            font-size: clamp(1.5rem, 6vw, 2.5rem) !important; 
-            color: var(--gray-text); 
+        .card-back .card-content {
+            color: var(--primary-color);
+        }
+        .initial-card-text {
+            font-size: clamp(1.5rem, 6vw, 2.5rem) !important;
+            color: var(--gray-text);
             text-align: center;
             line-height: 1.4;
         }
-        
-        /* Style for the final congratulatory message */
-        .end-session-message {
-            font-size: 2.5rem;
-            color: var(--text-color);
-        }
-        .end-session-message span {
+        .initial-card-subtext {
             display: block;
             font-size: 1.25rem;
             color: var(--gray-text);
+            margin-top: 8px;
+        }
+        .end-session-message {
+            font-size: 2.2rem;
+            color: var(--text-color);
+            animation: fadeIn 0.8s ease-out;
+            text-align: center;
+        }
+        .end-session-message span {
+            display: block;
+            font-size: 1.2rem;
+            color: var(--gray-text);
             margin-top: 10px;
+            line-height: 1.4;
         }
 
-        /* --- Action Buttons --- */
-        .action-buttons { display: flex; align-items: center; justify-content: center; gap: 20px; margin-bottom: 30px; }
-        .action-btn {
-            border: none; border-radius: 50%; width: 60px; height: 60px; color: white; cursor: pointer;
-            transition: transform 0.1s, box-shadow 0.2s; display: flex; align-items: center; justify-content: center;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        /* --- Action Buttons (Check, Correct, Incorrect) --- */
+        .action-buttons {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+            margin-bottom: 30px;
         }
-        .action-btn:hover:not(:disabled) { transform: translateY(-3px); box-shadow: 0 4px 8px rgba(0,0,0,0.25); }
-        .action-btn:active:not(:disabled) { transform: translateY(1px); }
-        .action-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: none; }
-        .action-btn svg { width: 32px; height: 32px; }
-        #check-btn { width: 120px; height: 50px; border-radius: 25px; font-size: 1.2rem; background-color: var(--primary-color); }
+        .action-btn {
+            border: none;
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            color: white;
+            cursor: pointer;
+            transition: transform 0.1s, box-shadow 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
+        .action-btn:hover:not(:disabled) {
+            transform: translateY(-3px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.25);
+        }
+        .action-btn:active:not(:disabled) {
+            transform: translateY(1px);
+        }
+        .action-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        .action-btn svg {
+            width: 32px;
+            height: 32px;
+        }
+        #check-btn {
+            width: 120px;
+            height: 50px;
+            border-radius: 25px;
+            font-size: 1.2rem;
+            background-color: var(--primary-color);
+        }
         #wrong-btn { background-color: var(--red-color); }
         #correct-btn { background-color: var(--green-color); }
 
-        /* --- Bottom Controls --- */
+        /* --- Bottom Controls (Numbers, Operations, Session Buttons) --- */
         .controls-container {
-            background: var(--card-bg); padding: 20px; border-radius: 16px; box-shadow: var(--current-shadow);
-            width: clamp(300px, 90vw, 900px); border: 1px solid var(--border-color);
-            animation: fadeIn 0.5s ease-out 0.2s; animation-fill-mode: backwards;
+            background: var(--card-bg);
+            padding: 20px;
+            border-radius: 16px;
+            box-shadow: var(--current-shadow);
+            width: clamp(300px, 90vw, 900px);
+            border: 1px solid var(--border-color);
+            animation: fadeIn 0.5s ease-out 0.2s;
+            animation-fill-mode: backwards;
             transition: background-color 0.3s, border-color 0.3s;
         }
-        .control-group h3 { margin: 0 0 10px 0; font-size: 1rem; font-weight: 600; color: var(--gray-text); text-align: center; }
-        .options { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; }
+        .control-group h3 {
+            margin: 0 0 10px 0;
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--gray-text);
+            text-align: center;
+        }
+        .options {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+        }
         .options label {
-            display: flex; align-items: center; justify-content: center; background-color: var(--option-bg);
-            border-radius: 8px; padding: 8px 12px; cursor: pointer; transition: background-color 0.2s;
-            font-weight: 500; color: var(--primary-color); user-select: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: var(--option-bg);
+            border-radius: 8px;
+            padding: 8px 12px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            font-weight: 500;
+            color: var(--primary-color);
+            user-select: none;
         }
-        .dark-theme .options label { color: var(--dark-text); }
-        .options input[type="checkbox"] { display: none; }
-        .options input[type="checkbox"]:checked + label { 
-            background-color: var(--primary-color); 
-            color: white; 
+        .dark-theme .options label {
+            color: var(--dark-text);
         }
-        .session-buttons { display: flex; gap: 10px; margin-top: 20px; }
-        .session-btn { 
-            flex-grow: 1; padding: 12px; font-size: 1rem; font-weight: 600; border-radius: 8px; 
-            border: 1px solid var(--border-color); cursor: pointer; transition: background-color 0.2s, color 0.2s; 
+        .options input[type="checkbox"] {
+            display: none; /* Hide the actual checkbox */
         }
-        #new-session-btn { background-color: var(--green-color); color: white; border-color: var(--green-color); }
-        #reset-btn { background-color: transparent; color: var(--gray-text); }
-        #reset-btn:hover { background-color: var(--hover-bg); }
+        .options input[type="checkbox"]:checked + label {
+            background-color: var(--primary-color);
+            color: white;
+        }
+        .session-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        .session-btn {
+            flex-grow: 1;
+            padding: 12px;
+            font-size: 1rem;
+            font-weight: 600;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            cursor: pointer;
+            transition: background-color 0.2s, color 0.2s;
+        }
+        #new-session-btn {
+            background-color: var(--green-color);
+            color: white;
+            border-color: var(--green-color);
+        }
+        #reset-btn {
+            background-color: transparent;
+            color: var(--gray-text);
+        }
+        #reset-btn:hover {
+            background-color: var(--hover-bg);
+        }
 
-        /* --- Mobile Responsiveness --- */
+        /* --- Responsive Design --- */
+        @media (min-width: 769px) {
+            .main-container {
+                /* Pushes the main content away from the stats panel on desktop to prevent overlap */
+                margin-right: 280px;
+            }
+        }
+
         @media (max-width: 768px) {
             body { padding: 10px; }
-            .header-panel { position: relative; top: 0; right: 0; width: 100%; margin-bottom: 20px; }
+            .donate-banner {
+                position: relative;
+                top: 0;
+                left: 0;
+                justify-content: center;
+                margin-bottom: 15px;
+                width: 100%;
+            }
+            .header-panel {
+                position: relative;
+                top: 0;
+                right: 0;
+                width: 100%;
+                margin-bottom: 20px;
+            }
             .main-container { padding-top: 0; }
-            .progress-bar-container, .card-container, .controls-container { width: 90vw; }
+            .progress-bar-container,
+            .card-container,
+            .controls-container {
+                width: 90vw;
+            }
             .end-session-message { font-size: 2rem; }
             .end-session-message span { font-size: 1.1rem; }
         }
-		.donate-banner {
-  position: absolute;
-  top: 20px;
-  left: 20px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 0.9rem;
-  color: var(--gray-text);
-  z-index: 100;
-}
-
-.donate-banner img {
-  height: 22px;
-  width: auto;
-  opacity: 0.85;
-  transition: opacity 0.2s ease;
-}
-
-.donate-banner img:hover {
-  opacity: 1;
-}
     </style>
 </head>
 <body>
-  <div class="donate-banner">
-    <span>Like this app?</span>
-    <a href="https://www.paypal.me/mattswymer84" target="_blank" title="PayPal">
-      <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/0/0e/PayPal_2024_%28Icon%29.svg/250px-PayPal_2024_%28Icon%29.svg.png" alt="PayPal" />
-    </a>
-    <a href="https://venmo.com/mattswymer" target="_blank" title="Venmo">
-      <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/8/84/Venmo_logo.png/1200px-Venmo_logo.png" alt="Venmo" />
-    </a>
-  </div>
+
+    <!-- Donation Links -->
+    <div class="donate-banner">
+        <span>Like this app?</span>
+        <a href="https://www.paypal.me/mattswymer84" target="_blank" title="PayPal">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/0/0e/PayPal_2024_%28Icon%29.svg/250px-PayPal_2024_%28Icon%29.svg.png" alt="PayPal Icon" onerror="this.style.display='none'">
+        </a>
+        <a href="https://venmo.com/mattswymer" target="_blank" title="Venmo">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/8/84/Venmo_logo.png/1200px-Venmo_logo.png" alt="Venmo Icon" onerror="this.style.display='none'">
+        </a>
+    </div>
+
+    <!-- Header: Statistics and Theme Switcher -->
     <div class="header-panel">
         <div class="stats-panel">
             <h2>Statistics</h2>
@@ -245,12 +461,17 @@
             <div class="stat-item"><span>Accuracy:</span> <span id="percentage-correct">--</span></div>
         </div>
         <div class="theme-switcher">
-             <select id="theme-select">
-                <option value="system">System Default</option><option value="light">Light</option><option value="dark">Dark</option>
-             </select>
+            <select id="theme-select" aria-label="Select color theme">
+                <option value="system">System Default</option>
+                <option value="light">Light</option>
+                <option value="dark">Dark</option>
+            </select>
         </div>
     </div>
+
+    <!-- Main Content: Progress Bar and Flash Card -->
     <div class="main-container">
+        <div id="progress-info" class="progress-info">0% complete</div>
         <div class="progress-bar-container" id="progress-container">
             <div class="progress-bar" id="progress-bar"></div>
         </div>
@@ -272,6 +493,8 @@
             <button class="action-btn" id="correct-btn" aria-label="Mark as correct" disabled><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg></button>
         </div>
     </div>
+
+    <!-- Bottom Controls: Number/Operation Selection and Session Buttons -->
     <div class="controls-container">
         <div class="control-group">
             <h3>Numbers</h3>
@@ -291,9 +514,13 @@
             <button class="session-btn" id="new-session-btn">New Session</button>
         </div>
     </div>
+
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            // --- DOM Elements ---
+            // =================================================================================
+            // --- DOM ELEMENT CACHING ---
+            // Caching references to DOM elements improves performance by avoiding repeated queries.
+            // =================================================================================
             const card = document.getElementById('card');
             const cardText = document.getElementById('card-text');
             const cardAnswer = document.getElementById('card-answer');
@@ -306,38 +533,59 @@
             const themeSelect = document.getElementById('theme-select');
             const progressContainer = document.getElementById('progress-container');
             const progressBar = document.getElementById('progress-bar');
-            
+            const progressInfo = document.getElementById('progress-info');
+
+            // Grouping stat elements for easier access.
             const statElements = {
-                total: document.getElementById('total-cards'), 
+                total: document.getElementById('total-cards'),
                 remaining: document.getElementById('cards-remaining'),
-                attempts: document.getElementById('total-attempts'), 
+                attempts: document.getElementById('total-attempts'),
                 correct: document.getElementById('num-correct'),
-                incorrect: document.getElementById('num-incorrect'), 
+                incorrect: document.getElementById('num-incorrect'),
                 accuracy: document.getElementById('percentage-correct'),
             };
 
-            // --- State Variables ---
-            let deck = [];
-            let currentCard = null;
-            let isSessionActive = false;
-            let stats = { total: 0, attempts: 0, correct: 0, incorrect: 0 };
+            // =================================================================================
+            // --- APPLICATION STATE ---
+            // These variables hold the core data for the application's current state.
+            // =================================================================================
+            let deck = []; // Array to hold the current session's flash cards {q: '1+1', a: 2}.
+            let currentCard = null; // The card currently being displayed.
+            let isSessionActive = false; // Flag to track if a practice session is in progress.
+            let stats = { total: 0, attempts: 0, correct: 0, incorrect: 0 }; // Statistics for the session.
 
-            // --- Initialization ---
+            // =================================================================================
+            // --- INITIALIZATION ---
+            // The main function that sets up the application when the page loads.
+            // =================================================================================
+            
+            /**
+             * Initializes the application.
+             * Generates number options, sets up the theme, loads saved settings,
+             * adds event listeners, and sets the initial UI state.
+             */
             function init() {
-                // Generate numbers 0-12
-                let numbersHTML = '';
-                for (let i = 0; i <= 12; i++) {
-                    numbersHTML += `<input type="checkbox" id="num-${i}" value="${i}"><label for="num-${i}">${i}</label>`;
-                }
-                numbersOptions.innerHTML = numbersHTML;
-
+                generateNumberCheckboxes();
                 setupTheme();
                 loadSettings();
                 addEventListeners();
                 resetToInitialState();
             }
 
-            // --- Event Listeners ---
+            /**
+             * Dynamically creates and injects the number selection checkboxes (0-12).
+             */
+            function generateNumberCheckboxes() {
+                let numbersHTML = '';
+                for (let i = 0; i <= 12; i++) {
+                    numbersHTML += `<input type="checkbox" id="num-${i}" value="${i}"><label for="num-${i}">${i}</label>`;
+                }
+                numbersOptions.innerHTML = numbersHTML;
+            }
+
+            /**
+             * Sets up all the necessary event listeners for the application's interactive elements.
+             */
             function addEventListeners() {
                 newSessionBtn.addEventListener('click', startNewSession);
                 resetBtn.addEventListener('click', resetSelections);
@@ -346,72 +594,68 @@
                 wrongBtn.addEventListener('click', () => handleGuess(false));
                 themeSelect.addEventListener('change', (e) => applyTheme(e.target.value));
             }
-            
-            // --- Settings & Theme ---
+
+            // =================================================================================
+            // --- THEME & SETTINGS MANAGEMENT ---
+            // Functions for handling theme changes and persisting user selections.
+            // =================================================================================
+
+            /**
+             * Reads the theme from localStorage and applies it. Defaults to 'system'.
+             */
             function setupTheme() {
                 const savedTheme = localStorage.getItem('flashCardTheme') || 'system';
                 themeSelect.value = savedTheme;
                 applyTheme(savedTheme);
             }
 
+            /**
+             * Applies the selected theme to the body and saves the preference.
+             * @param {string} theme - The theme to apply ('light', 'dark', or 'system').
+             */
             function applyTheme(theme) {
                 localStorage.setItem('flashCardTheme', theme);
                 const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-                document.body.className = (theme === 'system' && systemPrefersDark) || theme === 'dark' ? 'dark-theme' : 'light-theme';
+                const isDark = (theme === 'system' && systemPrefersDark) || theme === 'dark';
+                document.body.className = isDark ? 'dark-theme' : 'light-theme';
             }
-            
+
+            /**
+             * Loads previously selected numbers and operations from localStorage.
+             */
             function loadSettings() {
                 const savedNumbers = JSON.parse(localStorage.getItem('flashCardNumbers') || '[]');
                 const savedOps = JSON.parse(localStorage.getItem('flashCardOps') || '[]');
-                
+
                 savedNumbers.forEach(num => {
                     const el = document.getElementById(`num-${num}`);
                     if (el) el.checked = true;
                 });
-                
+
                 savedOps.forEach(op => {
                     const el = document.querySelector(`#operations-options input[value="${op}"]`);
                     if (el) el.checked = true;
                 });
             }
-            
+
+            /**
+             * Saves the user's current number and operation selections to localStorage.
+             * @param {number[]} numbers - Array of selected numbers.
+             * @param {string[]} ops - Array of selected operation symbols.
+             */
             function saveSettings(numbers, ops) {
                 localStorage.setItem('flashCardNumbers', JSON.stringify(numbers));
                 localStorage.setItem('flashCardOps', JSON.stringify(ops));
             }
 
-            // --- Reset Functions ---
-            function resetSelections() {
-                document.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = false);
-                localStorage.removeItem('flashCardNumbers');
-                localStorage.removeItem('flashCardOps');
-                resetToInitialState();
-            }
+            // =================================================================================
+            // --- CORE APPLICATION LOGIC ---
+            // Functions that manage the session, deck, and card flow.
+            // =================================================================================
 
-            function resetToInitialState() {
-                currentCard = null;
-                deck = [];
-                isSessionActive = false;
-                
-                card.classList.remove('is-flipped', 'in-session');
-                
-                cardText.innerHTML = ''; // Clear html content
-                cardText.textContent = 'Select numbers and operations to begin';
-                cardText.className = 'card-content initial-card-text';
-                cardAnswer.textContent = '';
-                
-                progressContainer.style.visibility = 'hidden';
-                updateProgressBar(true);
-                
-                resetStats();
-                updateStatsDisplay();
-                
-                checkBtn.disabled = true;
-                correctBtn.disabled = true;
-                wrongBtn.disabled = true;
-            }
-
-            // --- Core Logic ---
+            /**
+             * Starts a new practice session based on the user's selections.
+             */
             function startNewSession() {
                 const selectedNumbers = Array.from(document.querySelectorAll('#numbers-options input:checked')).map(cb => parseInt(cb.value));
                 const selectedOps = Array.from(document.querySelectorAll('#operations-options input:checked')).map(cb => cb.value);
@@ -420,42 +664,55 @@
                     alert('Please select at least two numbers and one operation to start.');
                     return;
                 }
-                
+
                 saveSettings(selectedNumbers, selectedOps);
                 generateDeck(selectedNumbers, selectedOps);
-                
+
                 if (deck.length === 0) {
-                    alert('No valid problems could be generated with your selections.');
+                    alert('No valid problems could be generated with your selections. Try including division-friendly numbers.');
                     return;
                 }
 
-                resetStats();
-                stats.total = deck.length;
+                // Reset state for the new session
+                stats = { total: deck.length, attempts: 0, correct: 0, incorrect: 0 };
                 isSessionActive = true;
-                
                 card.classList.remove('is-flipped');
                 card.classList.add('in-session');
-                
                 progressContainer.style.visibility = 'visible';
-                
+                progressInfo.classList.add('active');
+
                 drawNewCard();
                 updateStatsDisplay();
             }
-            
+
+            /**
+             * Generates a shuffled deck of unique flash cards.
+             * @param {number[]} numbers - The numbers to use for problems.
+             * @param {string[]} ops - The operations to use.
+             */
             function generateDeck(numbers, ops) {
                 deck = [];
-                const problems = new Set();
-                
+                const problems = new Set(); // Use a Set to prevent duplicate problems.
+
                 ops.forEach(op => {
                     numbers.forEach(n1 => {
                         numbers.forEach(n2 => {
                             let problem, answer;
-                            
-                            if (op === '+') { problem = `${n1} + ${n2}`; answer = n1 + n2; } 
-                            else if (op === '×') { problem = `${n1} × ${n2}`; answer = n1 * n2; } 
-                            else if (op === '-' && n1 >= n2) { problem = `${n1} - ${n2}`; answer = n1 - n2; } 
-                            else if (op === '÷' && n2 !== 0 && n1 % n2 === 0) { problem = `${n1} ÷ ${n2}`; answer = n1 / n2; }
-                            
+
+                            if (op === '+') {
+                                problem = `${n1} + ${n2}`;
+                                answer = n1 + n2;
+                            } else if (op === '×') {
+                                problem = `${n1} × ${n2}`;
+                                answer = n1 * n2;
+                            } else if (op === '-' && n1 >= n2) { // Avoid negative results
+                                problem = `${n1} - ${n2}`;
+                                answer = n1 - n2;
+                            } else if (op === '÷' && n2 !== 0 && n1 % n2 === 0) { // Avoid division by zero and non-integer results
+                                problem = `${n1} ÷ ${n2}`;
+                                answer = n1 / n2;
+                            }
+
                             if (problem && !problems.has(problem)) {
                                 problems.add(problem);
                                 deck.push({ q: problem, a: answer });
@@ -463,18 +720,19 @@
                         });
                     });
                 });
-                
+
                 shuffle(deck);
             }
 
+            /**
+             * Draws the next card from the deck or ends the session if the deck is empty.
+             */
             function drawNewCard() {
                 if (deck.length > 0) {
                     currentCard = deck.pop();
-                    
-                    cardText.className = 'card-content';
+                    cardText.className = 'card-content'; // Reset class from end message
                     cardText.textContent = currentCard.q;
                     cardAnswer.textContent = `${currentCard.q} = ${currentCard.a}`;
-                    
                     resetCardState();
                 } else {
                     endSession();
@@ -483,105 +741,179 @@
                 updateProgressBar();
             }
 
+            /**
+             * Handles the user's response (correct or incorrect) for the current card.
+             * @param {boolean} isCorrect - True if the user marked the card as correct.
+             */
             function handleGuess(isCorrect) {
                 stats.attempts++;
-                
+
                 if (isCorrect) {
                     stats.correct++;
                 } else {
                     stats.incorrect++;
-                    deck.push(currentCard);
+                    // If incorrect, add the card back to the deck to be seen again.
+                    deck.unshift(currentCard); // Add to the beginning to see it sooner
                     shuffle(deck);
                 }
-                
+
                 drawNewCard();
             }
 
-            // --- UI & State Management ---
-            function flipCard() { 
-                if (currentCard && isSessionActive) { 
-                    card.classList.add('is-flipped'); 
-                    checkBtn.disabled = true; 
-                    correctBtn.disabled = false; 
-                    wrongBtn.disabled = false; 
-                } 
+            /**
+             * Concludes the current session, displays the final score, and plays a celebration.
+             */
+            function endSession() {
+                currentCard = null;
+                isSessionActive = false;
+                card.classList.remove('in-session');
+                progressContainer.style.visibility = 'hidden';
+                progressInfo.classList.remove('active');
+
+                const accuracy = stats.attempts > 0 ? Math.round((stats.correct / stats.attempts) * 100) : 0;
+                
+                // Use a blank class to remove card-content font styling for the message
+                cardText.className = ''; 
+                cardText.innerHTML = `
+                    <div class="end-session-message">
+                        <strong>Congratulations!</strong>
+                        <span>You solved ${stats.total} unique problems in ${stats.attempts} attempts (${accuracy}% accuracy).</span>
+                        <span>Great work! Start a new session to keep practicing.</span>
+                    </div>`;
+                cardAnswer.textContent = '';
+
+                // Disable all action buttons
+                checkBtn.disabled = true;
+                correctBtn.disabled = true;
+                wrongBtn.disabled = true;
+
+                // Fire confetti!
+                if (typeof confetti === 'function') {
+                    confetti({ particleCount: 150, spread: 90, origin: { y: 0.6 } });
+                }
+            }
+
+
+            // =================================================================================
+            // --- UI & STATE RESET FUNCTIONS ---
+            // Functions for managing the visual state of the UI elements.
+            // =================================================================================
+
+            /**
+             * Resets the entire application to its initial, pre-session state.
+             */
+            function resetToInitialState() {
+                currentCard = null;
+                deck = [];
+                isSessionActive = false;
+
+                card.classList.remove('is-flipped', 'in-session');
+
+                cardText.innerHTML = `Welcome!
+                    <span class="initial-card-subtext">Select numbers and operations below to begin.</span>`;
+                cardText.className = 'card-content initial-card-text';
+                cardAnswer.textContent = '';
+
+                progressContainer.style.visibility = 'hidden';
+                progressInfo.classList.remove('active');
+                updateProgressBar(true); // Reset progress bar visuals
+
+                stats = { total: 0, attempts: 0, correct: 0, incorrect: 0 };
+                updateStatsDisplay();
+
+                checkBtn.disabled = true;
+                correctBtn.disabled = true;
+                wrongBtn.disabled = true;
             }
             
-            function resetCardState() { 
+            /**
+             * Clears all number and operation selections and resets the app state.
+             */
+            function resetSelections() {
+                document.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = false);
+                localStorage.removeItem('flashCardNumbers');
+                localStorage.removeItem('flashCardOps');
+                resetToInitialState();
+            }
+
+            /**
+             * Flips the card to show the answer and enables the correct/incorrect buttons.
+             */
+            function flipCard() {
+                if (currentCard && isSessionActive) {
+                    card.classList.add('is-flipped');
+                    checkBtn.disabled = true;
+                    correctBtn.disabled = false;
+                    wrongBtn.disabled = false;
+                }
+            }
+
+            /**
+             * Resets a card to its front-facing (problem) state and updates button availability.
+             */
+            function resetCardState() {
                 card.classList.remove('is-flipped');
-                checkBtn.disabled = !currentCard || !isSessionActive; 
-                correctBtn.disabled = true; 
-                wrongBtn.disabled = true; 
+                checkBtn.disabled = !currentCard || !isSessionActive;
+                correctBtn.disabled = true;
+                wrongBtn.disabled = true;
             }
 
-function endSession() {
-    currentCard = null;
-    isSessionActive = false;
-    card.classList.remove('in-session', 'is-flipped'); // ensure front face shows
-    progressContainer.style.visibility = 'hidden';
-
-    const accuracy = stats.attempts > 0 ? Math.round((stats.correct / stats.attempts) * 100) : 0;
-
-    cardText.className = 'card-content end-session-message';
-    cardText.innerHTML = `
-        <strong>Congratulations!</strong>
-        <span>You solved ${stats.total} unique problems in ${stats.attempts} attempts (${accuracy}% accuracy).</span>
-        <span>Start a new session to keep practicing.</span>
-    `;
-    cardAnswer.textContent = '';
-
-    checkBtn.disabled = true;
-    correctBtn.disabled = true;
-    wrongBtn.disabled = true;
-
-    if (typeof confetti === 'function') {
-        confetti({ particleCount: 150, spread: 90, origin: { y: 0.6 } });
-    }
-}
-            
-            function resetStats() { 
-                stats = { total: 0, attempts: 0, correct: 0, incorrect: 0 }; 
-            }
-            
+            /**
+             * Updates the visual progress bar and the percentage text.
+             * @param {boolean} [reset=false] - If true, resets the bar to 0%.
+             */
             function updateProgressBar(reset = false) {
                 if (reset) {
                     progressBar.style.width = '0%';
+                    progressInfo.textContent = '0% complete';
                     return;
                 }
                 if (stats.total > 0 && isSessionActive) {
                     const cardsCompleted = stats.total - (deck.length + (currentCard ? 1 : 0));
                     const progress = Math.max(0, Math.min(100, (cardsCompleted / stats.total) * 100));
                     progressBar.style.width = `${progress}%`;
+                    progressInfo.textContent = `${Math.round(progress)}% complete`;
                 } else {
                     progressBar.style.width = '0%';
                 }
             }
 
+            /**
+             * Updates all the text in the statistics panel.
+             */
             function updateStatsDisplay() {
                 const remaining = isSessionActive && currentCard ? deck.length + 1 : 0;
-                
                 statElements.total.textContent = stats.total;
                 statElements.remaining.textContent = remaining;
                 statElements.attempts.textContent = stats.attempts;
                 statElements.correct.textContent = stats.correct;
                 statElements.incorrect.textContent = stats.incorrect;
-                statElements.accuracy.textContent = stats.attempts > 0 
-                    ? `${Math.round((stats.correct / stats.attempts) * 100)}%` 
-                    : '--';
+                statElements.accuracy.textContent = stats.attempts > 0 ?
+                    `${Math.round((stats.correct / stats.attempts) * 100)}%` :
+                    '--';
             }
 
-            // --- Utility ---
+            // =================================================================================
+            // --- UTILITY FUNCTIONS ---
+            // Helper functions used throughout the application.
+            // =================================================================================
+
+            /**
+             * Shuffles an array in place using the Fisher-Yates algorithm.
+             * @param {Array} array - The array to be shuffled.
+             * @returns {Array} The shuffled array.
+             */
             function shuffle(array) {
-                for (let i = array.length - 1; i > 0; i--) { 
-                    const j = Math.floor(Math.random() * (i + 1)); 
-                    [array[i], array[j]] = [array[j], array[i]]; 
+                for (let i = array.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [array[i], array[j]] = [array[j], array[i]];
                 }
                 return array;
             }
-            
-            init(); // Start the App
+
+            // --- Start the application ---
+            init();
         });
     </script>
 </body>
-
 </html>
