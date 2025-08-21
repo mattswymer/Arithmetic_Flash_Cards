@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Arithmetic Flash Cards</title>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
+    <style>
+        /* --- Core Styles & Theme Variables --- */
+        :root {
+            --light-bg: #f0f2f5; --dark-bg: #18191a;
+            --light-card-bg: #ffffff; --dark-card-bg: #242526;
+            --light-text: #1c1e21; --dark-text: #e4e6eb;
+            --light-gray-text: #606770; --dark-gray-text: #b0b3b8;
+            --light-border: #dddfe2; --dark-border: #3a3b3c;
+            --light-option-bg: #e7f3ff; --dark-option-bg: #3a3b3c;
+            --light-hover-bg: #e9ebee; --dark-hover-bg: #4e4f50;
+            
+            --primary-color: #0866ff; --green-color: #31a24c; --red-color: #e41e3f;
+            --shadow: 0 4px 12px rgba(0, 0, 0, 0.1); --dark-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+        
+	@media (max-width: 768px) {
+    .header-panel { 
+        position: relative; 
+        top: auto; 
+        right: auto; 
+        width: 100%; 
+        margin-bottom: 20px; 
+    }
+    .stats-panel, .theme-switcher {
+        width: 100%;
+    }
+}
+        body.light-theme {
+            --bg-color: var(--light-bg); --card-bg: var(--light-card-bg); --text-color: var(--light-text);
+            --gray-text: var(--light-gray-text); --border-color: var(--light-border); --option-bg: var(--light-option-bg);
+            --hover-bg: var(--light-hover-bg); --current-shadow: var(--shadow);
+        }
+
+        body.dark-theme {
+            --bg-color: var(--dark-bg); --card-bg: var(--dark-card-bg); --text-color: var(--dark-text);
+            --gray-text: var(--dark-gray-text); --border-color: var(--dark-border); --option-bg: var(--dark-option-bg);
+            --hover-bg: var(--dark-hover-bg); --current-shadow: var(--dark-shadow);
+        }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color); color: var(--text-color); margin: 0; padding: 20px;
+            display: flex; flex-direction: column; align-items: center; justify-content: space-between;
+            min-height: 100vh; box-sizing: border-box; transition: background-color 0.3s, color 0.3s;
+        }
+
+        /* --- Header & Stats --- */
+        .header-panel {
+            position: absolute; top: 20px; right: 20px; display: flex;
+            flex-direction: column; gap: 15px; width: 240px; z-index: 10;
+        }
+        .stats-panel, .theme-switcher {
+            background: var(--card-bg); padding: 15px 25px; border-radius: 12px;
+            box-shadow: var(--current-shadow); border: 1px solid var(--border-color);
+            animation: fadeIn 0.5s ease-out; transition: background-color 0.3s, border-color 0.3s;
+        }
+        .stats-panel h2 { margin: 0 0 15px 0; font-size: 1.2rem; text-align: center; border-bottom: 1px solid var(--border-color); padding-bottom: 10px; }
+        .stat-item { display: flex; justify-content: space-between; font-size: 0.95rem; margin-bottom: 8px; }
+        .stat-item span:first-child { color: var(--gray-text); }
+        .stat-item span:last-child { font-weight: 600; }
+        .theme-switcher select { width: 100%; padding: 8px; border-radius: 6px; border: 1px solid var(--border-color); background-color: var(--bg-color); color: var(--text-color); font-size: 0.9rem; }
+
+        .main-container {
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            width: 100%; flex-grow: 1; padding-top: 50px; /* Space on mobile */
+        }
+
+        /* --- Progress Bar --- */
+        .progress-bar-container {
+            width: clamp(300px, 75vw, 600px);
+            height: 8px;
+            background-color: var(--border-color);
+            border-radius: 4px;
+            margin-bottom: 10px;
+            overflow: hidden;
+            visibility: hidden; /* Hidden by default */
+        }
+        .progress-bar {
+            width: 0%;
+            height: 100%;
+            background-color: var(--primary-color);
+            border-radius: 4px;
+            transition: width 0.3s ease-in-out;
+        }
+
+        /* --- Flash Card --- */
+        .card-container {
+            width: clamp(300px, 75vw, 600px); height: clamp(200px, 40vh, 350px);
+            perspective: 1000px; margin-bottom: 20px;
+        }
+        .card { 
+            width: 100%; height: 100%; position: relative; transform-style: preserve-3d; 
+            transition: transform 0.6s; box-shadow: var(--current-shadow); border-radius: 18px; 
+        }
+        .card.is-flipped { transform: rotateY(180deg); }
+        
+        .card-face {
+            position: absolute; width: 100%; height: 100%; backface-visibility: hidden; border-radius: 18px;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            padding: 20px; box-sizing: border-box; border: 1px solid var(--border-color);
+            background-color: var(--card-bg); transition: background-color 0.3s, border-color 0.3s;
+        }
+        
+        .card-back { transform: rotateY(180deg); }
+        
+        .card-label {
+            font-size: 1rem; font-weight: 600; color: var(--gray-text);
+            position: absolute; top: 20px;
+            opacity: 0; transition: opacity 0.3s;
+        }
+        .card.in-session .card-label {
+            opacity: 1; /* Show labels only when session starts */
+        }
+        
+        .card-content {
+            font-size: clamp(3rem, 12vw, 6rem); font-weight: bold;
+            line-height: 1.2; text-align: center; max-width: 90%;
+            transition: font-size 0.3s ease;
+        }
+        .card-back .card-content { color: var(--primary-color); }
+        
+        .initial-card-text { 
+            font-size: clamp(1.5rem, 6vw, 2.5rem) !important; 
+            color: var(--gray-text); 
+            text-align: center;
+            line-height: 1.4;
+        }
+        
+        /* Style for the final congratulatory message */
+        .end-session-message {
+            font-size: 2.5rem;
+            color: var(--text-color);
+        }
+        .end-session-message span {
+            display: block;
+            font-size: 1.25rem;
+            color: var(--gray-text);
+            margin-top: 10px;
+        }
+
+        /* --- Action Buttons --- */
+        .action-buttons { display: flex; align-items: center; justify-content: center; gap: 20px; margin-bottom: 30px; }
+        .action-btn {
+            border: none; border-radius: 50%; width: 60px; height: 60px; color: white; cursor: pointer;
+            transition: transform 0.1s, box-shadow 0.2s; display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+        .action-btn:hover:not(:disabled) { transform: translateY(-3px); box-shadow: 0 4px 8px rgba(0,0,0,0.25); }
+        .action-btn:active:not(:disabled) { transform: translateY(1px); }
+        .action-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: none; }
+        .action-btn svg { width: 32px; height: 32px; }
+        #check-btn { width: 120px; height: 50px; border-radius: 25px; font-size: 1.2rem; background-color: var(--primary-color); }
+        #wrong-btn { background-color: var(--red-color); }
+        #correct-btn { background-color: var(--green-color); }
+
+        /* --- Bottom Controls --- */
+        .controls-container {
+            background: var(--card-bg); padding: 20px; border-radius: 16px; box-shadow: var(--current-shadow);
+            width: clamp(300px, 90vw, 900px); border: 1px solid var(--border-color);
+            animation: fadeIn 0.5s ease-out 0.2s; animation-fill-mode: backwards;
+            transition: background-color 0.3s, border-color 0.3s;
+        }
+        .control-group h3 { margin: 0 0 10px 0; font-size: 1rem; font-weight: 600; color: var(--gray-text); text-align: center; }
+        .options { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; }
+        .options label {
+            display: flex; align-items: center; justify-content: center; background-color: var(--option-bg);
+            border-radius: 8px; padding: 8px 12px; cursor: pointer; transition: background-color 0.2s;
+            font-weight: 500; color: var(--primary-color); user-select: none;
+        }
+        .dark-theme .options label { color: var(--dark-text); }
+        .options input[type="checkbox"] { display: none; }
+        .options input[type="checkbox"]:checked + label { 
+            background-color: var(--primary-color); 
+            color: white; 
+        }
+        .session-buttons { display: flex; gap: 10px; margin-top: 20px; }
+        .session-btn { 
+            flex-grow: 1; padding: 12px; font-size: 1rem; font-weight: 600; border-radius: 8px; 
+            border: 1px solid var(--border-color); cursor: pointer; transition: background-color 0.2s, color 0.2s; 
+        }
+        #new-session-btn { background-color: var(--green-color); color: white; border-color: var(--green-color); }
+        #reset-btn { background-color: transparent; color: var(--gray-text); }
+        #reset-btn:hover { background-color: var(--hover-bg); }
+
+        /* --- Mobile Responsiveness --- */
+        @media (max-width: 768px) {
+            body { padding: 10px; }
+            .header-panel { position: relative; top: 0; right: 0; width: 100%; margin-bottom: 20px; }
+            .main-container { padding-top: 0; }
+            .progress-bar-container, .card-container, .controls-container { width: 90vw; }
+            .end-session-message { font-size: 2rem; }
+            .end-session-message span { font-size: 1.1rem; }
+        }
+    </style>
+</head>
+<body>
+    <div class="header-panel">
+        <div class="stats-panel">
+            <h2>Statistics</h2>
+            <div class="stat-item"><span>Total Cards:</span> <span id="total-cards">0</span></div>
+            <div class="stat-item"><span>Remaining:</span> <span id="cards-remaining">0</span></div>
+            <div class="stat-item"><span>Attempts:</span> <span id="total-attempts">0</span></div>
+            <div class="stat-item"><span>Correct:</span> <span id="num-correct">0</span></div>
+            <div class="stat-item"><span>Incorrect:</span> <span id="num-incorrect">0</span></div>
+            <div class="stat-item"><span>Accuracy:</span> <span id="percentage-correct">--</span></div>
+        </div>
+        <div class="theme-switcher">
+             <select id="theme-select">
+                <option value="system">System Default</option><option value="light">Light</option><option value="dark">Dark</option>
+             </select>
+        </div>
+    </div>
+    <div class="main-container">
+        <div class="progress-bar-container" id="progress-container">
+            <div class="progress-bar" id="progress-bar"></div>
+        </div>
+        <div class="card-container">
+            <div class="card" id="card">
+                <div class="card-face card-front">
+                    <div class="card-label">Problem</div>
+                    <div id="card-text" class="card-content"></div>
+                </div>
+                <div class="card-face card-back">
+                    <div class="card-label">Answer</div>
+                    <div id="card-answer" class="card-content"></div>
+                </div>
+            </div>
+        </div>
+        <div class="action-buttons">
+            <button class="action-btn" id="wrong-btn" aria-label="Mark as incorrect" disabled><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+            <button class="action-btn" id="check-btn" aria-label="Check answer" disabled>Check</button>
+            <button class="action-btn" id="correct-btn" aria-label="Mark as correct" disabled><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg></button>
+        </div>
+    </div>
+    <div class="controls-container">
+        <div class="control-group">
+            <h3>Numbers</h3>
+            <div class="options" id="numbers-options"></div>
+        </div>
+        <div class="control-group">
+            <h3>Operations</h3>
+            <div class="options" id="operations-options">
+                <input type="checkbox" id="add" value="+"><label for="add">Addition (+)</label>
+                <input type="checkbox" id="subtract" value="-"><label for="subtract">Subtraction (-)</label>
+                <input type="checkbox" id="multiply" value="×"><label for="multiply">Multiplication (×)</label>
+                <input type="checkbox" id="divide" value="÷"><label for="divide">Division (÷)</label>
+            </div>
+        </div>
+        <div class="session-buttons">
+            <button class="session-btn" id="reset-btn">Reset Selections</button>
+            <button class="session-btn" id="new-session-btn">New Session</button>
+        </div>
+    </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // --- DOM Elements ---
+            const card = document.getElementById('card');
+            const cardText = document.getElementById('card-text');
+            const cardAnswer = document.getElementById('card-answer');
+            const checkBtn = document.getElementById('check-btn');
+            const correctBtn = document.getElementById('correct-btn');
+            const wrongBtn = document.getElementById('wrong-btn');
+            const newSessionBtn = document.getElementById('new-session-btn');
+            const resetBtn = document.getElementById('reset-btn');
+            const numbersOptions = document.getElementById('numbers-options');
+            const themeSelect = document.getElementById('theme-select');
+            const progressContainer = document.getElementById('progress-container');
+            const progressBar = document.getElementById('progress-bar');
+            
+            const statElements = {
+                total: document.getElementById('total-cards'), 
+                remaining: document.getElementById('cards-remaining'),
+                attempts: document.getElementById('total-attempts'), 
+                correct: document.getElementById('num-correct'),
+                incorrect: document.getElementById('num-incorrect'), 
+                accuracy: document.getElementById('percentage-correct'),
+            };
+
+            // --- State Variables ---
+            let deck = [];
+            let currentCard = null;
+            let isSessionActive = false;
+            let stats = { total: 0, attempts: 0, correct: 0, incorrect: 0 };
+
+            // --- Initialization ---
+            function init() {
+                // Generate numbers 0-12
+                let numbersHTML = '';
+                for (let i = 0; i <= 12; i++) {
+                    numbersHTML += `<input type="checkbox" id="num-${i}" value="${i}"><label for="num-${i}">${i}</label>`;
+                }
+                numbersOptions.innerHTML = numbersHTML;
+
+                setupTheme();
+                loadSettings();
+                addEventListeners();
+                resetToInitialState();
+            }
+
+            // --- Event Listeners ---
+            function addEventListeners() {
+                newSessionBtn.addEventListener('click', startNewSession);
+                resetBtn.addEventListener('click', resetSelections);
+                checkBtn.addEventListener('click', flipCard);
+                correctBtn.addEventListener('click', () => handleGuess(true));
+                wrongBtn.addEventListener('click', () => handleGuess(false));
+                themeSelect.addEventListener('change', (e) => applyTheme(e.target.value));
+            }
+            
+            // --- Settings & Theme ---
+            function setupTheme() {
+                const savedTheme = localStorage.getItem('flashCardTheme') || 'system';
+                themeSelect.value = savedTheme;
+                applyTheme(savedTheme);
+            }
+
+            function applyTheme(theme) {
+                localStorage.setItem('flashCardTheme', theme);
+                const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+                document.body.className = (theme === 'system' && systemPrefersDark) || theme === 'dark' ? 'dark-theme' : 'light-theme';
+            }
+            
+            function loadSettings() {
+                const savedNumbers = JSON.parse(localStorage.getItem('flashCardNumbers') || '[]');
+                const savedOps = JSON.parse(localStorage.getItem('flashCardOps') || '[]');
+                
+                savedNumbers.forEach(num => {
+                    const el = document.getElementById(`num-${num}`);
+                    if (el) el.checked = true;
+                });
+                
+                savedOps.forEach(op => {
+                    const el = document.querySelector(`#operations-options input[value="${op}"]`);
+                    if (el) el.checked = true;
+                });
+            }
+            
+            function saveSettings(numbers, ops) {
+                localStorage.setItem('flashCardNumbers', JSON.stringify(numbers));
+                localStorage.setItem('flashCardOps', JSON.stringify(ops));
+            }
+
+            // --- Reset Functions ---
+            function resetSelections() {
+                document.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = false);
+                localStorage.removeItem('flashCardNumbers');
+                localStorage.removeItem('flashCardOps');
+                resetToInitialState();
+            }
+
+            function resetToInitialState() {
+                currentCard = null;
+                deck = [];
+                isSessionActive = false;
+                
+                card.classList.remove('is-flipped', 'in-session');
+                
+                cardText.innerHTML = ''; // Clear html content
+                cardText.textContent = 'Select numbers and operations to begin';
+                cardText.className = 'card-content initial-card-text';
+                cardAnswer.textContent = '';
+                
+                progressContainer.style.visibility = 'hidden';
+                updateProgressBar(true);
+                
+                resetStats();
+                updateStatsDisplay();
+                
+                checkBtn.disabled = true;
+                correctBtn.disabled = true;
+                wrongBtn.disabled = true;
+            }
+
+            // --- Core Logic ---
+            function startNewSession() {
+                const selectedNumbers = Array.from(document.querySelectorAll('#numbers-options input:checked')).map(cb => parseInt(cb.value));
+                const selectedOps = Array.from(document.querySelectorAll('#operations-options input:checked')).map(cb => cb.value);
+
+                if (selectedNumbers.length < 2 || selectedOps.length < 1) {
+                    alert('Please select at least two numbers and one operation to start.');
+                    return;
+                }
+                
+                saveSettings(selectedNumbers, selectedOps);
+                generateDeck(selectedNumbers, selectedOps);
+                
+                if (deck.length === 0) {
+                    alert('No valid problems could be generated with your selections.');
+                    return;
+                }
+
+                resetStats();
+                stats.total = deck.length;
+                isSessionActive = true;
+                
+                card.classList.remove('is-flipped');
+                card.classList.add('in-session');
+                
+                progressContainer.style.visibility = 'visible';
+                
+                drawNewCard();
+                updateStatsDisplay();
+            }
+            
+            function generateDeck(numbers, ops) {
+                deck = [];
+                const problems = new Set();
+                
+                ops.forEach(op => {
+                    numbers.forEach(n1 => {
+                        numbers.forEach(n2 => {
+                            let problem, answer;
+                            
+                            if (op === '+') { problem = `${n1} + ${n2}`; answer = n1 + n2; } 
+                            else if (op === '×') { problem = `${n1} × ${n2}`; answer = n1 * n2; } 
+                            else if (op === '-' && n1 >= n2) { problem = `${n1} - ${n2}`; answer = n1 - n2; } 
+                            else if (op === '÷' && n2 !== 0 && n1 % n2 === 0) { problem = `${n1} ÷ ${n2}`; answer = n1 / n2; }
+                            
+                            if (problem && !problems.has(problem)) {
+                                problems.add(problem);
+                                deck.push({ q: problem, a: answer });
+                            }
+                        });
+                    });
+                });
+                
+                shuffle(deck);
+            }
+
+            function drawNewCard() {
+                if (deck.length > 0) {
+                    currentCard = deck.pop();
+                    
+                    cardText.className = 'card-content';
+                    cardText.textContent = currentCard.q;
+                    cardAnswer.textContent = `${currentCard.q} = ${currentCard.a}`;
+                    
+                    resetCardState();
+                } else {
+                    endSession();
+                }
+                updateStatsDisplay();
+                updateProgressBar();
+            }
+
+            function handleGuess(isCorrect) {
+                stats.attempts++;
+                
+                if (isCorrect) {
+                    stats.correct++;
+                } else {
+                    stats.incorrect++;
+                    deck.push(currentCard);
+                    shuffle(deck);
+                }
+                
+                drawNewCard();
+            }
+
+            // --- UI & State Management ---
+            function flipCard() { 
+                if (currentCard && isSessionActive) { 
+                    card.classList.add('is-flipped'); 
+                    checkBtn.disabled = true; 
+                    correctBtn.disabled = false; 
+                    wrongBtn.disabled = false; 
+                } 
+            }
+            
+            function resetCardState() { 
+                card.classList.remove('is-flipped');
+                checkBtn.disabled = !currentCard || !isSessionActive; 
+                correctBtn.disabled = true; 
+                wrongBtn.disabled = true; 
+            }
+
+function endSession() {
+    currentCard = null;
+    isSessionActive = false;
+    card.classList.remove('in-session');
+    progressContainer.style.visibility = 'hidden';
+
+    const accuracy = stats.attempts > 0 ? Math.round((stats.correct / stats.attempts) * 100) : 0;
+
+    cardText.className = 'card-content end-session-message';
+    cardText.innerHTML = `
+        <strong>Congratulations!</strong>
+        <span>You solved ${stats.total} unique problems in ${stats.attempts} attempts (${accuracy}% accuracy).</span>
+        <span>Start a new session to keep practicing.</span>
+    `;
+    cardAnswer.textContent = '';
+
+    checkBtn.disabled = true;
+    correctBtn.disabled = true;
+    wrongBtn.disabled = true;
+
+    if (typeof confetti === 'function') {
+        confetti({ particleCount: 150, spread: 90, origin: { y: 0.6 } });
+    }
+}
+            
+            function resetStats() { 
+                stats = { total: 0, attempts: 0, correct: 0, incorrect: 0 }; 
+            }
+            
+            function updateProgressBar(reset = false) {
+                if (reset) {
+                    progressBar.style.width = '0%';
+                    return;
+                }
+                if (stats.total > 0 && isSessionActive) {
+                    const cardsCompleted = stats.total - (deck.length + (currentCard ? 1 : 0));
+                    const progress = Math.max(0, Math.min(100, (cardsCompleted / stats.total) * 100));
+                    progressBar.style.width = `${progress}%`;
+                } else {
+                    progressBar.style.width = '0%';
+                }
+            }
+
+            function updateStatsDisplay() {
+                const remaining = isSessionActive && currentCard ? deck.length + 1 : 0;
+                
+                statElements.total.textContent = stats.total;
+                statElements.remaining.textContent = remaining;
+                statElements.attempts.textContent = stats.attempts;
+                statElements.correct.textContent = stats.correct;
+                statElements.incorrect.textContent = stats.incorrect;
+                statElements.accuracy.textContent = stats.attempts > 0 
+                    ? `${Math.round((stats.correct / stats.attempts) * 100)}%` 
+                    : '--';
+            }
+
+            // --- Utility ---
+            function shuffle(array) {
+                for (let i = array.length - 1; i > 0; i--) { 
+                    const j = Math.floor(Math.random() * (i + 1)); 
+                    [array[i], array[j]] = [array[j], array[i]]; 
+                }
+                return array;
+            }
+            
+            init(); // Start the App
+        });
+    </script>
+</body>
+</html>
