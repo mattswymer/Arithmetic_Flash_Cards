@@ -200,9 +200,40 @@
             .end-session-message { font-size: 2rem; }
             .end-session-message span { font-size: 1.1rem; }
         }
+		.donate-banner {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.9rem;
+  color: var(--gray-text);
+  z-index: 100;
+}
+
+.donate-banner img {
+  height: 22px;
+  width: auto;
+  opacity: 0.85;
+  transition: opacity 0.2s ease;
+}
+
+.donate-banner img:hover {
+  opacity: 1;
+}
     </style>
 </head>
 <body>
+  <div class="donate-banner">
+    <span>Like this app?</span>
+    <a href="https://www.paypal.me/mattswymer84" target="_blank" title="PayPal">
+      <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/0/0e/PayPal_2024_%28Icon%29.svg/250px-PayPal_2024_%28Icon%29.svg.png" alt="PayPal" />
+    </a>
+    <a href="https://venmo.com/mattswymer" target="_blank" title="Venmo">
+      <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/8/84/Venmo_logo.png/1200px-Venmo_logo.png" alt="Venmo" />
+    </a>
+  </div>
     <div class="header-panel">
         <div class="stats-panel">
             <h2>Statistics</h2>
