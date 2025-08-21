@@ -694,11 +694,12 @@
                 deck = [];
                 const problems = new Set(); // Use a Set to prevent duplicate problems.
 
+                // --- Standard Operations: +, -, × ---
                 ops.forEach(op => {
+                    if (op === '÷') return; // Skip division for now; it's handled separately.
                     numbers.forEach(n1 => {
                         numbers.forEach(n2 => {
                             let problem, answer;
-
                             if (op === '+') {
                                 problem = `${n1} + ${n2}`;
                                 answer = n1 + n2;
@@ -708,9 +709,6 @@
                             } else if (op === '-' && n1 >= n2) { // Avoid negative results
                                 problem = `${n1} - ${n2}`;
                                 answer = n1 - n2;
-                            } else if (op === '÷' && n2 !== 0 && n1 % n2 === 0) { // Avoid division by zero and non-integer results
-                                problem = `${n1} ÷ ${n2}`;
-                                answer = n1 / n2;
                             }
 
                             if (problem && !problems.has(problem)) {
@@ -720,6 +718,25 @@
                         });
                     });
                 });
+
+                // --- Special Division Logic ---
+                // This creates problems where the selected numbers are the divisor and the answer.
+                if (ops.includes('÷')) {
+                    numbers.forEach(n1 => { // n1 will be the answer
+                        numbers.forEach(n2 => { // n2 will be the divisor
+                            if (n2 === 0) return; // Cannot divide by zero
+
+                            const dividend = n1 * n2;
+                            const problem = `${dividend} ÷ ${n2}`;
+                            const answer = n1;
+
+                            if (!problems.has(problem)) {
+                                problems.add(problem);
+                                deck.push({ q: problem, a: answer });
+                            }
+                        });
+                    });
+                }
 
                 shuffle(deck);
             }
