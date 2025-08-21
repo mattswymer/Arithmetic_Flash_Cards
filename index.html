@@ -486,7 +486,7 @@
 function endSession() {
     currentCard = null;
     isSessionActive = false;
-    card.classList.remove('in-session');
+    card.classList.remove('in-session', 'is-flipped'); // ensure front face shows
     progressContainer.style.visibility = 'hidden';
 
     const accuracy = stats.attempts > 0 ? Math.round((stats.correct / stats.attempts) * 100) : 0;
@@ -552,4 +552,5 @@ function endSession() {
         });
     </script>
 </body>
+
 </html>
