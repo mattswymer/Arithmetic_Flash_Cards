@@ -783,7 +783,7 @@
             function endSession() {
                 currentCard = null;
                 isSessionActive = false;
-                card.classList.remove('in-session');
+                card.classList.remove('in-session', 'is-flipped'); // <-- THE FIX IS HERE
                 progressContainer.style.visibility = 'hidden';
                 progressInfo.classList.remove('active');
 
