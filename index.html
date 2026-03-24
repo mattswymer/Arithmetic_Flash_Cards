@@ -4,896 +4,1207 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Arithmetic Flash Cards</title>
-
-    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Nunito+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js" integrity="sha256-WCbHuGSHSRNXkAvRj7gn7PBuMidkNz6UVlJbHoGpFTw=" crossorigin="anonymous"></script>
 
     <style>
-        /* --- Core Styles & Theme Variables --- */
+        /* =============================================
+           THEME VARIABLES
+        ============================================= */
         :root {
-            --light-bg: #f0f2f5;
-            --dark-bg: #18191a;
-            --light-card-bg: #ffffff;
-            --dark-card-bg: #242526;
-            --light-text: #1c1e21;
-            --dark-text: #e4e6eb;
-            --light-gray-text: #606770;
-            --dark-gray-text: #b0b3b8;
-            --light-border: #dddfe2;
-            --dark-border: #3a3b3c;
-            --light-option-bg: #e7f3ff;
-            --dark-option-bg: #3a3b3c;
-            --light-hover-bg: #e9ebee;
-            --dark-hover-bg: #4e4f50;
+            --flip-duration: 600ms;
+            --flip-midpoint: 300ms; /* Must be exactly half of --flip-duration */
 
-            --primary-color: #0866ff;
-            --green-color: #31a24c;
-            --red-color: #e41e3f;
-            --shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-            --dark-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            --primary:       #4f6ef7;
+            --primary-light: #eef1fe;
+            --green:         #22c55e;
+            --green-light:   #dcfce7;
+            --red:           #ef4444;
+            --red-light:     #fee2e2;
+
+            --radius-sm:  8px;
+            --radius-md:  14px;
+            --radius-lg:  20px;
+            --radius-xl:  28px;
         }
 
-        body.light-theme {
-            --bg-color: var(--light-bg);
-            --card-bg: var(--light-card-bg);
-            --text-color: var(--light-text);
-            --gray-text: var(--light-gray-text);
-            --border-color: var(--light-border);
-            --option-bg: var(--light-option-bg);
-            --hover-bg: var(--light-hover-bg);
-            --current-shadow: var(--shadow);
+        body.light {
+            --bg:           #f4f6fb;
+            --surface:      #ffffff;
+            --surface-2:    #f0f2f9;
+            --border:       #e2e5f0;
+            --text:         #1a1d2e;
+            --text-muted:   #6b7280;
+            --shadow:       0 2px 12px rgba(0,0,0,0.07), 0 1px 3px rgba(0,0,0,0.05);
+            --shadow-card:  0 8px 32px rgba(79,110,247,0.10), 0 2px 8px rgba(0,0,0,0.06);
         }
 
-        body.dark-theme {
-            --bg-color: var(--dark-bg);
-            --card-bg: var(--dark-card-bg);
-            --text-color: var(--dark-text);
-            --gray-text: var(--dark-gray-text);
-            --border-color: var(--dark-border);
-            --option-bg: var(--dark-option-bg);
-            --hover-bg: var(--dark-hover-bg);
-            --current-shadow: var(--dark-shadow);
+        body.dark {
+            --bg:           #0f1117;
+            --surface:      #1a1d2a;
+            --surface-2:    #22263a;
+            --border:       #2d3148;
+            --text:         #e8eaf6;
+            --text-muted:   #8b91b3;
+            --shadow:       0 2px 12px rgba(0,0,0,0.3), 0 1px 3px rgba(0,0,0,0.2);
+            --shadow-card:  0 8px 32px rgba(0,0,0,0.4), 0 2px 8px rgba(0,0,0,0.2);
         }
 
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
+        /* =============================================
+           RESET & BASE
+        ============================================= */
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-color);
-            margin: 0;
-            padding: 0;
+            font-family: 'Nunito Sans', sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
             display: flex;
             justify-content: center;
-            min-height: 100vh;
             transition: background-color 0.3s, color 0.3s;
         }
 
-        /* --- App Container (Mobile First & Centered) --- */
-        .app-container {
+        /* =============================================
+           LAYOUT
+        ============================================= */
+        .app {
             width: 100%;
-            max-width: 800px;
-            padding: 20px;
-            box-sizing: border-box;
+            max-width: 780px;
+            padding: 20px 20px 40px;
             display: flex;
             flex-direction: column;
-            gap: 20px;
+            gap: 18px;
         }
 
-        /* --- Top Header (Donate & Theme) --- */
-        .top-header {
+        /* =============================================
+           TOP HEADER
+        ============================================= */
+        .top-bar {
             display: flex;
             justify-content: space-between;
             align-items: center;
+            gap: 12px;
             flex-wrap: wrap;
-            gap: 15px;
         }
 
-        .donate-banner {
+        .donate-links {
             display: flex;
             align-items: center;
-            gap: 8px;
-            font-size: 0.9rem;
-            color: var(--gray-text);
+            gap: 10px;
+            font-size: 0.85rem;
+            color: var(--text-muted);
         }
-        .donate-banner img {
-            height: 22px;
+
+        .donate-links a img {
+            height: 20px;
             width: auto;
-            opacity: 0.85;
-            transition: opacity 0.2s ease;
+            opacity: 0.7;
+            transition: opacity 0.2s;
+            display: block;
         }
-        .donate-banner img:hover { opacity: 1; }
+        .donate-links a img:hover { opacity: 1; }
 
-        .theme-switcher select {
-            padding: 8px;
-            border-radius: 6px;
-            border: 1px solid var(--border-color);
-            background-color: var(--card-bg);
-            color: var(--text-color);
-            font-size: 0.9rem;
-            box-shadow: var(--current-shadow);
+        .theme-select {
+            padding: 7px 10px;
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--border);
+            background: var(--surface);
+            color: var(--text);
+            font-family: inherit;
+            font-size: 0.85rem;
             cursor: pointer;
+            box-shadow: var(--shadow);
         }
 
-        /* --- Stats Panel (Horizontal Grid) --- */
+        /* =============================================
+           STATS PANEL
+        ============================================= */
         .stats-panel {
-            background: var(--card-bg);
-            padding: 15px;
-            border-radius: 12px;
-            box-shadow: var(--current-shadow);
-            border: 1px solid var(--border-color);
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            box-shadow: var(--shadow);
             display: grid;
             grid-template-columns: repeat(3, 1fr);
-            gap: 10px;
-            text-align: center;
-            animation: fadeIn 0.5s ease-out;
+            divide-color: var(--border);
+            overflow: hidden;
         }
-        .stat-item {
-            display: flex;
-            flex-direction: column;
-            font-size: 0.9rem;
-        }
-        .stat-item span:first-child { color: var(--gray-text); font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.5px; }
-        .stat-item span:last-child { font-weight: bold; font-size: 1.1rem; margin-top: 4px; }
 
-        /* --- Progress Bar --- */
-        .progress-wrapper {
+        .stat {
+            padding: 12px 8px;
+            text-align: center;
+            border-right: 1px solid var(--border);
+        }
+        .stat:nth-child(3),
+        .stat:nth-child(6) { border-right: none; }
+        .stat:nth-child(4),
+        .stat:nth-child(5),
+        .stat:nth-child(6) { border-top: 1px solid var(--border); }
+
+        .stat-label {
+            font-size: 0.7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.6px;
+            color: var(--text-muted);
+        }
+
+        .stat-value {
+            font-family: 'Nunito', sans-serif;
+            font-size: 1.2rem;
+            font-weight: 800;
+            margin-top: 3px;
+            color: var(--text);
+        }
+
+        /* =============================================
+           PROGRESS
+        ============================================= */
+        .progress-section {
             display: flex;
             flex-direction: column;
-            align-items: center;
-            width: 100%;
+            gap: 5px;
         }
-        .progress-info {
-            font-size: 0.95rem;
-            font-weight: 500;
-            color: var(--gray-text);
-            margin-bottom: 6px;
+
+        .progress-label {
+            font-size: 0.82rem;
+            font-weight: 600;
+            color: var(--text-muted);
             visibility: hidden;
         }
-        .progress-info.active {
-            visibility: visible;
-            animation: fadeIn 0.4s ease-out;
-        }
-        .progress-bar-container {
+        .progress-label.visible { visibility: visible; }
+
+        .progress-track {
             width: 100%;
-            height: 8px;
-            background-color: var(--border-color);
-            border-radius: 4px;
+            height: 7px;
+            background: var(--border);
+            border-radius: 99px;
             overflow: hidden;
             visibility: hidden;
         }
-        .progress-bar {
-            width: 0%;
+        .progress-track.visible { visibility: visible; }
+
+        .progress-fill {
             height: 100%;
-            background-color: var(--primary-color);
-            border-radius: 4px;
-            transition: width 0.3s ease-in-out;
+            width: 0%;
+            background: linear-gradient(90deg, var(--primary), #818cf8);
+            border-radius: 99px;
+            transition: width 0.4s ease;
         }
 
-        /* --- Flash Card Styling --- */
-        .card-container {
+        /* =============================================
+           FLASH CARD
+        ============================================= */
+        .card-scene {
             width: 100%;
-            height: clamp(250px, 40vh, 350px);
-            perspective: 1000px;
+            height: clamp(240px, 38vh, 340px);
+            perspective: 1200px;
         }
+
         .card {
             width: 100%;
             height: 100%;
             position: relative;
             transform-style: preserve-3d;
-            transition: transform 0.6s ease-in-out;
-            box-shadow: var(--current-shadow);
-            border-radius: 18px;
+            transition: transform var(--flip-duration) cubic-bezier(0.4, 0, 0.2, 1);
+            border-radius: var(--radius-xl);
         }
-        .card.is-flipped { transform: rotateY(180deg); }
+        .card.flipped { transform: rotateY(180deg); }
+
         .card-face {
             position: absolute;
-            width: 100%;
-            height: 100%;
+            inset: 0;
             backface-visibility: hidden;
-            border-radius: 18px;
+            border-radius: var(--radius-xl);
             display: flex;
             flex-direction: column;
-            justify-content: center;
             align-items: center;
-            padding: 20px;
-            box-sizing: border-box;
-            border: 1px solid var(--border-color);
-            background-color: var(--card-bg);
+            justify-content: center;
+            padding: 24px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow-card);
+            transition: background 0.3s, border-color 0.3s;
         }
+
         .card-back { transform: rotateY(180deg); }
-        .card-label {
-            font-size: 1rem;
-            font-weight: 600;
-            color: var(--gray-text);
+
+        /* Correct / Wrong flash states on the front face */
+        .card-face.flash-correct { background: var(--green-light); border-color: var(--green); }
+        .card-face.flash-wrong   { background: var(--red-light);   border-color: var(--red); }
+        body.dark .card-face.flash-correct { background: #14402a; border-color: var(--green); }
+        body.dark .card-face.flash-wrong   { background: #401414; border-color: var(--red); }
+
+        .card-badge {
             position: absolute;
-            top: 20px;
+            top: 18px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            color: var(--text-muted);
             opacity: 0;
             transition: opacity 0.3s;
         }
-        .card.in-session .card-label { opacity: 1; }
-        .card-content {
-            font-size: clamp(4rem, 15vw, 7rem);
-            font-weight: bold;
-            line-height: 1.2;
-            text-align: center;
-            max-width: 90%;
-        }
-        .card-back .card-content { color: var(--primary-color); }
+        .card.active .card-badge { opacity: 1; }
 
-        .initial-card-text {
-            font-size: clamp(1.5rem, 6vw, 2.5rem) !important;
-            color: var(--gray-text);
-            text-align: center;
-            line-height: 1.4;
-        }
-        .initial-card-subtext {
-            display: block;
-            font-size: 1.1rem;
-            color: var(--gray-text);
-            margin-top: 10px;
-        }
-        .end-session-message {
-            font-size: 2rem;
-            color: var(--text-color);
-            animation: fadeIn 0.8s ease-out;
+        .card-equation {
+            font-family: 'Nunito', sans-serif;
+            font-size: clamp(3.5rem, 14vw, 6.5rem);
+            font-weight: 900;
+            line-height: 1.1;
             text-align: center;
         }
-        .end-session-message span {
-            display: block;
-            font-size: 1.1rem;
-            color: var(--gray-text);
-            margin-top: 12px;
-            line-height: 1.4;
-        }
+        .card-back .card-equation { color: var(--primary); }
 
-        /* --- Action Buttons --- */
-        .action-buttons {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 20px;
+        /* Idle / end states shown inside card-front */
+        .card-idle {
+            font-family: 'Nunito', sans-serif;
+            font-size: clamp(1.4rem, 5vw, 2.2rem);
+            font-weight: 700;
+            color: var(--text-muted);
+            text-align: center;
+            line-height: 1.5;
         }
-        .action-btn {
-            border: none;
-            border-radius: 50%;
-            width: 65px;
-            height: 65px;
-            color: white;
-            cursor: pointer;
-            transition: transform 0.1s, box-shadow 0.2s;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
-        }
-        .action-btn:hover:not(:disabled) {
-            transform: translateY(-3px);
-            box-shadow: 0 6px 10px rgba(0, 0, 0, 0.25);
-        }
-        .action-btn:active:not(:disabled) { transform: translateY(1px); }
-        .action-btn:disabled {
-            opacity: 0.4;
-            cursor: not-allowed;
-            transform: none;
-            box-shadow: none;
-        }
-        .action-btn svg { width: 34px; height: 34px; }
-        #check-btn {
-            width: 130px;
-            height: 55px;
-            border-radius: 28px;
-            font-size: 1.3rem;
+        .card-idle small {
+            display: block;
+            font-size: 0.9rem;
             font-weight: 600;
-            background-color: var(--primary-color);
+            margin-top: 8px;
         }
-        #wrong-btn { background-color: var(--red-color); }
-        #correct-btn { background-color: var(--green-color); }
 
-        /* --- Bottom Controls --- */
-        .controls-container {
-            background: var(--card-bg);
-            padding: 25px 20px;
-            border-radius: 16px;
-            box-shadow: var(--current-shadow);
-            width: 100%;
-            box-sizing: border-box;
-            border: 1px solid var(--border-color);
-            animation: fadeIn 0.5s ease-out 0.2s;
-            animation-fill-mode: backwards;
+        .card-complete {
+            text-align: center;
         }
+        .card-complete-title {
+            font-family: 'Nunito', sans-serif;
+            font-size: clamp(1.8rem, 6vw, 2.6rem);
+            font-weight: 900;
+            color: var(--text);
+        }
+        .card-complete-sub {
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            margin-top: 10px;
+            line-height: 1.5;
+        }
+
+        /* =============================================
+           ACTION BUTTONS
+        ============================================= */
+        .actions {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 22px;
+        }
+
+        .btn-round {
+            width: 62px;
+            height: 62px;
+            border-radius: 50%;
+            border: none;
+            color: #fff;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.12s, box-shadow 0.2s, opacity 0.2s;
+            box-shadow: 0 4px 14px rgba(0,0,0,0.18);
+            flex-shrink: 0;
+        }
+        .btn-round:hover:not(:disabled) {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.22);
+        }
+        .btn-round:active:not(:disabled) { transform: translateY(1px); }
+        .btn-round:disabled { opacity: 0.35; cursor: not-allowed; transform: none; box-shadow: none; }
+        .btn-round svg { width: 30px; height: 30px; }
+
+        .btn-wrong   { background: var(--red); }
+        .btn-correct { background: var(--green); }
+
+        .btn-flip {
+            width: 140px;
+            height: 54px;
+            border-radius: 99px;
+            border: none;
+            background: var(--primary);
+            color: #fff;
+            font-family: 'Nunito', sans-serif;
+            font-size: 1.2rem;
+            font-weight: 800;
+            cursor: pointer;
+            transition: transform 0.12s, box-shadow 0.2s, opacity 0.2s, background 0.2s;
+            box-shadow: 0 4px 14px rgba(79,110,247,0.35);
+        }
+        .btn-flip:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 22px rgba(79,110,247,0.45);
+        }
+        .btn-flip:active:not(:disabled) { transform: translateY(1px); }
+        .btn-flip:disabled { opacity: 0.35; cursor: not-allowed; transform: none; box-shadow: none; }
+
+        /* Keyboard shortcut hints shown below buttons */
+        .actions-hint {
+            text-align: center;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            min-height: 1.2em;
+        }
+
+        /* =============================================
+           INLINE VALIDATION MESSAGE
+        ============================================= */
+        .validation-msg {
+            background: var(--red-light);
+            color: var(--red);
+            border: 1px solid var(--red);
+            border-radius: var(--radius-sm);
+            padding: 10px 14px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            display: none;
+        }
+        .validation-msg.visible { display: block; }
+        body.dark .validation-msg { background: #401414; }
+
+        /* =============================================
+           CONTROLS PANEL
+        ============================================= */
+        .controls {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow);
+            padding: 24px 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 0;
+        }
+
         .control-group {
-            margin-bottom: 20px;
-            padding-bottom: 20px;
-            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 22px;
+            margin-bottom: 22px;
+            border-bottom: 1px solid var(--border);
         }
-        .control-group:last-child {
+        .control-group:last-of-type {
             border-bottom: none;
             margin-bottom: 0;
             padding-bottom: 0;
         }
+
         .control-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 15px;
-            flex-wrap: wrap;
+            margin-bottom: 14px;
             gap: 10px;
+            flex-wrap: wrap;
         }
-        .control-header h3 {
-            margin: 0;
-            font-size: 1.05rem;
-            font-weight: 600;
-            color: var(--gray-text);
+
+        .control-title {
+            font-family: 'Nunito', sans-serif;
+            font-size: 0.95rem;
+            font-weight: 800;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
-        .text-btn {
+
+        .link-btns {
+            display: flex;
+            gap: 4px;
+        }
+
+        .btn-link {
             background: none;
             border: none;
-            color: var(--primary-color);
+            color: var(--primary);
+            font-family: inherit;
+            font-size: 0.85rem;
+            font-weight: 700;
             cursor: pointer;
-            font-size: 0.9rem;
-            font-weight: 600;
-            padding: 6px 10px;
-            border-radius: 6px;
+            padding: 5px 8px;
+            border-radius: var(--radius-sm);
+            transition: background 0.15s;
         }
-        .text-btn:hover { background-color: var(--hover-bg); }
+        .btn-link:hover { background: var(--primary-light); }
+        body.dark .btn-link:hover { background: var(--surface-2); }
 
-        .options {
+        /* Checkbox pill grid */
+        .pill-grid {
             display: flex;
             flex-wrap: wrap;
-            gap: 10px;
-        }
-        .options label {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background-color: var(--option-bg);
-            border-radius: 8px;
-            padding: 10px 14px;
-            cursor: pointer;
-            transition: background-color 0.2s;
-            font-weight: 600;
-            font-size: 1rem;
-            color: var(--primary-color);
-            user-select: none;
-            flex-grow: 1;
-            text-align: center;
-        }
-        .dark-theme .options label { color: var(--dark-text); }
-        .options input[type="checkbox"] { display: none; }
-        .options input[type="checkbox"]:checked + label {
-            background-color: var(--primary-color);
-            color: white;
+            gap: 8px;
         }
 
-        .range-inputs {
+        .pill-grid input[type="checkbox"] { display: none; }
+
+        .pill-grid label {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 48px;
+            padding: 8px 14px;
+            background: var(--surface-2);
+            border: 1.5px solid var(--border);
+            border-radius: 99px;
+            font-family: 'Nunito', sans-serif;
+            font-size: 0.95rem;
+            font-weight: 800;
+            color: var(--text-muted);
+            cursor: pointer;
+            user-select: none;
+            transition: background 0.15s, color 0.15s, border-color 0.15s;
+            text-align: center;
+        }
+
+        /* Operation pills stretch to fill the row; number pills stay naturally sized */
+        #operation-pills label { flex-grow: 1; }
+
+        .pill-grid input:checked + label {
+            background: var(--primary);
+            border-color: var(--primary);
+            color: #fff;
+        }
+
+        .pill-grid label:hover { border-color: var(--primary); color: var(--primary); }
+        .pill-grid input:checked + label:hover { color: #fff; }
+
+        /* Range row */
+        .range-row {
             display: flex;
             gap: 20px;
             align-items: center;
-        }
-        .range-inputs label {
-            color: var(--gray-text);
-            font-weight: 600;
-            font-size: 1rem;
-        }
-        .range-inputs input {
-            width: 65px;
-            padding: 8px;
-            border: 1px solid var(--border-color);
-            border-radius: 6px;
-            background: var(--bg-color);
-            color: var(--text-color);
-            font-size: 1.1rem;
-            text-align: center;
-            margin-left: 8px;
-        }
-
-        .session-buttons {
-            display: flex;
-            gap: 15px;
-            margin-top: 10px;
             flex-wrap: wrap;
         }
-        .session-btn {
-            flex-grow: 1;
-            padding: 14px;
-            font-size: 1.1rem;
-            font-weight: 600;
-            border-radius: 10px;
-            border: 1px solid var(--border-color);
-            cursor: pointer;
-            transition: background-color 0.2s, color 0.2s;
-        }
-        #new-session-btn {
-            background-color: var(--green-color);
-            color: white;
-            border-color: var(--green-color);
-        }
-        #reset-btn {
-            background-color: transparent;
-            color: var(--gray-text);
-        }
-        #reset-btn:hover { background-color: var(--hover-bg); }
 
-        /* --- Mobile Tweaks --- */
-        @media (max-width: 600px) {
+        .range-field {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .range-field label {
+            font-size: 0.9rem;
+            font-weight: 700;
+            color: var(--text-muted);
+        }
+
+        .range-field input {
+            width: 72px;
+            padding: 8px 10px;
+            border: 1.5px solid var(--border);
+            border-radius: var(--radius-sm);
+            background: var(--surface-2);
+            color: var(--text);
+            font-family: 'Nunito', sans-serif;
+            font-size: 1rem;
+            font-weight: 700;
+            text-align: center;
+            transition: border-color 0.15s;
+        }
+        .range-field input:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        /* Session buttons */
+        .session-btns {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .btn-session {
+            flex: 1;
+            padding: 14px;
+            border-radius: var(--radius-md);
+            border: 1.5px solid var(--border);
+            font-family: 'Nunito', sans-serif;
+            font-size: 1rem;
+            font-weight: 800;
+            cursor: pointer;
+            transition: background 0.15s, color 0.15s, border-color 0.15s, transform 0.1s;
+        }
+        .btn-session:hover { transform: translateY(-1px); }
+        .btn-session:active { transform: translateY(1px); }
+
+        .btn-start {
+            background: var(--green);
+            color: #fff;
+            border-color: var(--green);
+            box-shadow: 0 3px 12px rgba(34,197,94,0.3);
+        }
+        .btn-start:hover { background: #16a34a; border-color: #16a34a; }
+
+        .btn-reset {
+            background: transparent;
+            color: var(--text-muted);
+        }
+        .btn-reset:hover { background: var(--surface-2); }
+
+        /* =============================================
+           RESPONSIVE
+        ============================================= */
+        @media (max-width: 560px) {
             .stats-panel { grid-template-columns: repeat(2, 1fr); }
-            .top-header { justify-content: center; }
-            .action-buttons { gap: 15px; }
-            .action-btn { width: 55px; height: 55px; }
-            #check-btn { width: 110px; height: 50px; font-size: 1.1rem; }
+            .stat:nth-child(2) { border-right: none; }
+            .stat:nth-child(3) { border-top: 1px solid var(--border); border-right: 1px solid var(--border); }
+            .stat:nth-child(4) { border-right: none; }
+            .stat:nth-child(6) { border-right: none; }
+            .actions { gap: 14px; }
+            .btn-round { width: 54px; height: 54px; }
+            .btn-flip { width: 120px; height: 50px; font-size: 1.1rem; }
         }
     </style>
 </head>
-<body>
+<body class="light">
 
-    <div class="app-container">
+<div class="app">
 
-        <div class="top-header">
-            <div class="donate-banner">
-                <span>Like this app?</span>
-                <a href="https://www.paypal.me/mattswymer84" target="_blank" title="PayPal">
-                    <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/0/0e/PayPal_2024_%28Icon%29.svg/250px-PayPal_2024_%28Icon%29.svg.png" alt="PayPal Icon" onerror="this.style.display='none'">
-                </a>
-                <a href="https://venmo.com/mattswymer" target="_blank" title="Venmo">
-                    <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/8/84/Venmo_logo.png/1200px-Venmo_logo.png" alt="Venmo Icon" onerror="this.style.display='none'">
-                </a>
-            </div>
-            <div class="theme-switcher">
-                <select id="theme-select" aria-label="Select color theme">
-                    <option value="system">System Default</option>
-                    <option value="light">Light</option>
-                    <option value="dark">Dark</option>
-                </select>
-            </div>
+    <!-- Top bar: donate links + theme switcher -->
+    <header class="top-bar">
+        <div class="donate-links">
+            <span>Like this app?</span>
+            <a href="https://www.paypal.me/mattswymer84" target="_blank" rel="noopener" title="Donate via PayPal">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/0/0e/PayPal_2024_%28Icon%29.svg/250px-PayPal_2024_%28Icon%29.svg.png" alt="PayPal" onerror="this.closest('a').style.display='none'">
+            </a>
+            <a href="https://venmo.com/mattswymer" target="_blank" rel="noopener" title="Donate via Venmo">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/8/84/Venmo_logo.png/1200px-Venmo_logo.png" alt="Venmo" onerror="this.closest('a').style.display='none'">
+            </a>
         </div>
+        <select id="theme-select" class="theme-select" aria-label="Color theme">
+            <option value="system">System Theme</option>
+            <option value="light">Light</option>
+            <option value="dark">Dark</option>
+        </select>
+    </header>
 
-        <div class="stats-panel">
-            <div class="stat-item"><span>Total</span> <span id="total-cards">0</span></div>
-            <div class="stat-item"><span>Remaining</span> <span id="cards-remaining">0</span></div>
-            <div class="stat-item"><span>Accuracy</span> <span id="percentage-correct">--</span></div>
-            <div class="stat-item"><span>Attempts</span> <span id="total-attempts">0</span></div>
-            <div class="stat-item"><span>Correct</span> <span id="num-correct">0</span></div>
-            <div class="stat-item"><span>Incorrect</span> <span id="num-incorrect">0</span></div>
+    <!-- Stats -->
+    <div class="stats-panel" role="region" aria-label="Session statistics">
+        <div class="stat"><div class="stat-label">Total</div><div class="stat-value" id="stat-total">0</div></div>
+        <div class="stat"><div class="stat-label">Remaining</div><div class="stat-value" id="stat-remaining">0</div></div>
+        <div class="stat"><div class="stat-label">Accuracy</div><div class="stat-value" id="stat-accuracy">--</div></div>
+        <div class="stat"><div class="stat-label">Attempts</div><div class="stat-value" id="stat-attempts">0</div></div>
+        <div class="stat"><div class="stat-label">Correct</div><div class="stat-value" id="stat-correct">0</div></div>
+        <div class="stat"><div class="stat-label">Incorrect</div><div class="stat-value" id="stat-incorrect">0</div></div>
+    </div>
+
+    <!-- Progress -->
+    <div class="progress-section">
+        <div id="progress-label" class="progress-label">0 of 0 unique problems solved</div>
+        <div id="progress-track" class="progress-track" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+            <div id="progress-fill" class="progress-fill"></div>
         </div>
+    </div>
 
-        <div class="progress-wrapper">
-            <div id="progress-info" class="progress-info">0% complete</div>
-            <div class="progress-bar-container" id="progress-container">
-                <div class="progress-bar" id="progress-bar"></div>
+    <!-- Flash Card -->
+    <div class="card-scene">
+        <div id="card" class="card">
+            <div class="card-face card-front" id="card-front">
+                <span class="card-badge">Problem</span>
+                <div id="card-front-content" class="card-equation"></div>
             </div>
-        </div>
-
-        <div class="card-container">
-            <div class="card" id="card">
-                <div class="card-face card-front">
-                    <div class="card-label">Problem</div>
-                    <div id="card-text" class="card-content"></div>
-                </div>
-                <div class="card-face card-back">
-                    <div class="card-label">Answer</div>
-                    <div id="card-answer" class="card-content"></div>
-                </div>
-            </div>
-        </div>
-
-        <div class="action-buttons">
-            <button class="action-btn" id="wrong-btn" aria-label="Mark as incorrect" disabled>
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-            </button>
-            <button class="action-btn" id="check-btn" aria-label="Check answer" disabled>Check</button>
-            <button class="action-btn" id="correct-btn" aria-label="Mark as correct" disabled>
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
-            </button>
-        </div>
-
-        <div class="controls-container">
-            <div class="control-group">
-                <div class="control-header">
-                    <h3>1. Focus Numbers</h3>
-                    <div>
-                        <button class="text-btn" id="select-all-btn">Select All</button>
-                        <button class="text-btn" id="clear-all-btn">Clear</button>
-                    </div>
-                </div>
-                <div class="options" id="numbers-options"></div>
-            </div>
-
-            <div class="control-group">
-                <div class="control-header">
-                    <h3>2. Range (Tested against)</h3>
-                </div>
-                <div class="range-inputs">
-                    <label>Min: <input type="number" id="range-min" value="0" min="0" max="100"></label>
-                    <label>Max: <input type="number" id="range-max" value="12" min="0" max="100"></label>
-                </div>
-            </div>
-
-            <div class="control-group">
-                <div class="control-header">
-                    <h3>3. Operations</h3>
-                </div>
-                <div class="options" id="operations-options">
-                    <input type="checkbox" id="add" value="+"><label for="add">Addition (+)</label>
-                    <input type="checkbox" id="subtract" value="-"><label for="subtract">Subtraction (-)</label>
-                    <input type="checkbox" id="multiply" value="×"><label for="multiply">Multiplication (×)</label>
-                    <input type="checkbox" id="divide" value="÷"><label for="divide">Division (÷)</label>
-                </div>
-            </div>
-
-            <div class="session-buttons">
-                <button class="session-btn" id="reset-btn">Reset All Settings</button>
-                <button class="session-btn" id="new-session-btn">Start New Session</button>
+            <div class="card-face card-back">
+                <span class="card-badge">Answer</span>
+                <div id="card-back-content" class="card-equation"></div>
             </div>
         </div>
     </div>
 
-    <script>
-        // ==========================================
-        // Data Models & State Management
-        // ==========================================
-        class DeckManager {
-            constructor() {
-                this.cards = [];
+    <!-- Action Buttons -->
+    <div class="actions" role="group" aria-label="Card actions">
+        <button id="btn-wrong" class="btn-round btn-wrong" aria-label="Mark incorrect (←)" disabled>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round">
+                <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
+        </button>
+        <button id="btn-flip" class="btn-flip" aria-label="Flip card (Space)" disabled>Flip</button>
+        <button id="btn-correct" class="btn-round btn-correct" aria-label="Mark correct (→)" disabled>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round">
+                <polyline points="20 6 9 17 4 12"/>
+            </svg>
+        </button>
+    </div>
+    <div class="actions-hint" id="actions-hint" aria-live="polite"></div>
+
+    <!-- Inline validation message -->
+    <div id="validation-msg" class="validation-msg" role="alert" aria-live="assertive"></div>
+
+    <!-- Controls -->
+    <div class="controls">
+
+        <!-- 1. Focus Numbers -->
+        <div class="control-group">
+            <div class="control-header">
+                <span class="control-title">1. Focus Numbers</span>
+                <div class="link-btns">
+                    <button class="btn-link" id="btn-select-all">Select All</button>
+                    <button class="btn-link" id="btn-clear-all">Clear</button>
+                </div>
+            </div>
+            <div class="pill-grid" id="number-pills"></div>
+        </div>
+
+        <!-- 2. Range -->
+        <div class="control-group">
+            <div class="control-header">
+                <span class="control-title">2. Range (Tested Against)</span>
+            </div>
+            <div class="range-row">
+                <div class="range-field">
+                    <label for="range-min">Min</label>
+                    <input type="number" id="range-min" value="0" min="0" max="144">
+                </div>
+                <div class="range-field">
+                    <label for="range-max">Max</label>
+                    <input type="number" id="range-max" value="12" min="0" max="144">
+                </div>
+            </div>
+        </div>
+
+        <!-- 3. Operations -->
+        <div class="control-group">
+            <div class="control-header">
+                <span class="control-title">3. Operations</span>
+            </div>
+            <div class="pill-grid" id="operation-pills">
+                <input type="checkbox" id="op-add"      value="+"><label for="op-add">Addition (+)</label>
+                <input type="checkbox" id="op-sub"      value="-"><label for="op-sub">Subtraction (−)</label>
+                <input type="checkbox" id="op-mul"      value="×"><label for="op-mul">Multiplication (×)</label>
+                <input type="checkbox" id="op-div"      value="÷"><label for="op-div">Division (÷)</label>
+            </div>
+        </div>
+
+        <!-- Session Buttons -->
+        <div class="session-btns">
+            <button id="btn-reset" class="btn-session btn-reset">Reset All Settings</button>
+            <button id="btn-start" class="btn-session btn-start">Start New Session</button>
+        </div>
+
+    </div>
+
+</div><!-- /.app -->
+
+<script>
+/* =============================================
+   CONSTANTS
+============================================= */
+const FLIP_MIDPOINT_MS = 300; // Must match CSS --flip-midpoint (half of --flip-duration)
+const FLASH_DURATION_MS = 180;
+const MAX_RANGE = 144;
+const STORAGE_KEYS = {
+    settings: 'fc_settings_v2',
+    theme:    'fc_theme_v2',
+};
+
+/* =============================================
+   DECK MANAGER
+   Owns card generation, shuffling, and draw logic.
+============================================= */
+class DeckManager {
+    constructor() {
+        this._cards = [];
+        this._totalGenerated = 0;
+    }
+
+    get remaining()  { return this._cards.length; }
+    get totalGenerated() { return this._totalGenerated; }
+
+    generate(focusNumbers, minRange, maxRange, operations) {
+        this._cards = [];
+        this._totalGenerated = 0;
+        const seen = new Set();
+
+        const push = (q, a) => {
+            if (!seen.has(q)) {
+                seen.add(q);
+                this._cards.push({ q, a });
             }
+        };
 
-            generate(focusNumbers, minRange, maxRange, operations) {
-                this.cards = [];
-                const problems = new Set();
-
-                const addCard = (q, a) => {
-                    if (!problems.has(q)) {
-                        problems.add(q);
-                        this.cards.push({ q, a });
+        for (const op of operations) {
+            for (const f of focusNumbers) {
+                for (let i = minRange; i <= maxRange; i++) {
+                    switch (op) {
+                        case '+':
+                            push(`${f} + ${i}`, f + i);
+                            if (i !== f) push(`${i} + ${f}`, i + f);
+                            break;
+                        case '-':
+                            push(`${f + i} − ${f}`, i);
+                            break;
+                        case '×':
+                            push(`${f} × ${i}`, f * i);
+                            if (i !== f) push(`${i} × ${f}`, i * f);
+                            break;
+                        case '÷':
+                            if (f !== 0) push(`${f * i} ÷ ${f}`, i);
+                            break;
                     }
-                };
-
-                operations.forEach(op => {
-                    focusNumbers.forEach(focusNum => {
-                        for (let i = minRange; i <= maxRange; i++) {
-                            if (op === '+') {
-                                addCard(`${focusNum} + ${i}`, focusNum + i);
-                                addCard(`${i} + ${focusNum}`, i + focusNum);
-                            }
-                            else if (op === '-') {
-                                const sum = focusNum + i;
-                                addCard(`${sum} - ${focusNum}`, i);
-                            }
-                            else if (op === '×') {
-                                addCard(`${focusNum} × ${i}`, focusNum * i);
-                                addCard(`${i} × ${focusNum}`, i * focusNum);
-                            }
-                            else if (op === '÷') {
-                                if (focusNum !== 0) {
-                                    const product = focusNum * i;
-                                    addCard(`${product} ÷ ${focusNum}`, i);
-                                }
-                            }
-                        }
-                    });
-                });
-
-                this.shuffle();
-                return this.cards.length > 0;
-            }
-
-            shuffle() {
-                for (let i = this.cards.length - 1; i > 0; i--) {
-                    const j = Math.floor(Math.random() * (i + 1));
-                    [this.cards[i], this.cards[j]] = [this.cards[j], this.cards[i]];
-                }
-            }
-
-            draw() {
-                return this.cards.pop();
-            }
-
-            reinsertForReview(card) {
-                const insertIndex = Math.max(0, this.cards.length - 3);
-                this.cards.splice(insertIndex, 0, card);
-            }
-
-            get remaining() {
-                return this.cards.length;
-            }
-        }
-
-        class StorageManager {
-            static saveSettings(settings) {
-                localStorage.setItem('flashCardSettings', JSON.stringify(settings));
-            }
-            static loadSettings() {
-                return JSON.parse(localStorage.getItem('flashCardSettings') || '{}');
-            }
-            static saveTheme(theme) {
-                localStorage.setItem('flashCardTheme', theme);
-            }
-            static loadTheme() {
-                return localStorage.getItem('flashCardTheme') || 'system';
-            }
-            static clearSettings() {
-                localStorage.removeItem('flashCardSettings');
-            }
-        }
-
-        // ==========================================
-        // User Interface Controller
-        // ==========================================
-        class FlashcardApp {
-            constructor() {
-                this.deckManager = new DeckManager();
-                this.currentCard = null;
-                this.isSessionActive = false;
-                this.stats = { total: 0, attempts: 0, correct: 0, incorrect: 0 };
-
-                this.cacheDOM();
-                this.init();
-            }
-
-            cacheDOM() {
-                this.dom = {
-                    card: document.getElementById('card'),
-                    cardText: document.getElementById('card-text'),
-                    cardAnswer: document.getElementById('card-answer'),
-                    checkBtn: document.getElementById('check-btn'),
-                    correctBtn: document.getElementById('correct-btn'),
-                    wrongBtn: document.getElementById('wrong-btn'),
-                    newSessionBtn: document.getElementById('new-session-btn'),
-                    resetBtn: document.getElementById('reset-btn'),
-                    numbersOptions: document.getElementById('numbers-options'),
-                    selectAllBtn: document.getElementById('select-all-btn'),
-                    clearAllBtn: document.getElementById('clear-all-btn'),
-                    rangeMin: document.getElementById('range-min'),
-                    rangeMax: document.getElementById('range-max'),
-                    themeSelect: document.getElementById('theme-select'),
-                    progressContainer: document.getElementById('progress-container'),
-                    progressBar: document.getElementById('progress-bar'),
-                    progressInfo: document.getElementById('progress-info'),
-                    stats: {
-                        total: document.getElementById('total-cards'),
-                        remaining: document.getElementById('cards-remaining'),
-                        attempts: document.getElementById('total-attempts'),
-                        correct: document.getElementById('num-correct'),
-                        incorrect: document.getElementById('num-incorrect'),
-                        accuracy: document.getElementById('percentage-correct'),
-                    }
-                };
-            }
-
-            init() {
-                this.generateNumberCheckboxes();
-                this.bindEvents();
-                this.loadTheme();
-                this.loadSettings();
-                this.resetToInitialState();
-            }
-
-            generateNumberCheckboxes() {
-                let html = '';
-                for (let i = 0; i <= 12; i++) {
-                    html += `<input type="checkbox" id="num-${i}" value="${i}"><label for="num-${i}">${i}</label>`;
-                }
-                this.dom.numbersOptions.innerHTML = html;
-            }
-
-            bindEvents() {
-                this.dom.newSessionBtn.addEventListener('click', () => this.startSession());
-                this.dom.resetBtn.addEventListener('click', () => this.resetAllSettings());
-                this.dom.checkBtn.addEventListener('click', () => this.flipCard());
-                this.dom.correctBtn.addEventListener('click', () => this.handleGuess(true));
-                this.dom.wrongBtn.addEventListener('click', () => this.handleGuess(false));
-                this.dom.themeSelect.addEventListener('change', (e) => this.applyTheme(e.target.value));
-
-                this.dom.selectAllBtn.addEventListener('click', () => this.toggleCheckboxes(true));
-                this.dom.clearAllBtn.addEventListener('click', () => this.toggleCheckboxes(false));
-            }
-
-            toggleCheckboxes(state) {
-                document.querySelectorAll('#numbers-options input[type="checkbox"]').forEach(cb => cb.checked = state);
-            }
-
-            loadTheme() {
-                const theme = StorageManager.loadTheme();
-                this.dom.themeSelect.value = theme;
-                this.applyTheme(theme);
-            }
-
-            applyTheme(theme) {
-                StorageManager.saveTheme(theme);
-                const isDark = (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches) || theme === 'dark';
-                document.body.className = isDark ? 'dark-theme' : 'light-theme';
-            }
-
-            loadSettings() {
-                const settings = StorageManager.loadSettings();
-
-                if (settings.numbers) {
-                    settings.numbers.forEach(num => {
-                        const el = document.getElementById(`num-${num}`);
-                        if (el) el.checked = true;
-                    });
-                }
-                if (settings.ops) {
-                    settings.ops.forEach(op => {
-                        const el = document.querySelector(`#operations-options input[value="${op}"]`);
-                        if (el) el.checked = true;
-                    });
-                }
-                if (settings.rangeMin !== undefined) this.dom.rangeMin.value = settings.rangeMin;
-                if (settings.rangeMax !== undefined) this.dom.rangeMax.value = settings.rangeMax;
-            }
-
-            saveSettings(numbers, ops, rangeMin, rangeMax) {
-                StorageManager.saveSettings({ numbers, ops, rangeMin, rangeMax });
-            }
-
-            resetAllSettings() {
-                document.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = false);
-                this.dom.rangeMin.value = 0;
-                this.dom.rangeMax.value = 12;
-                StorageManager.clearSettings();
-                this.resetToInitialState();
-            }
-
-            startSession() {
-                const numbers = Array.from(document.querySelectorAll('#numbers-options input:checked')).map(cb => parseInt(cb.value));
-                const ops = Array.from(document.querySelectorAll('#operations-options input:checked')).map(cb => cb.value);
-                const minRange = parseInt(this.dom.rangeMin.value);
-                const maxRange = parseInt(this.dom.rangeMax.value);
-
-                if (numbers.length === 0 || ops.length === 0) {
-                    alert('Please select at least one Focus Number and one Operation.');
-                    return;
-                }
-                if (minRange > maxRange || isNaN(minRange) || isNaN(maxRange)) {
-                    alert('Please ensure your Range Min is less than or equal to Range Max.');
-                    return;
-                }
-
-                this.saveSettings(numbers, ops, minRange, maxRange);
-
-                const hasCards = this.deckManager.generate(numbers, minRange, maxRange, ops);
-
-                if (!hasCards) {
-                    alert('No valid problems could be generated (e.g., trying to divide by zero). Please adjust your settings.');
-                    return;
-                }
-
-                this.stats = { total: this.deckManager.remaining, attempts: 0, correct: 0, incorrect: 0 };
-                this.isSessionActive = true;
-                this.dom.card.classList.remove('is-flipped');
-                this.dom.card.classList.add('in-session');
-                this.dom.progressContainer.style.visibility = 'visible';
-                this.dom.progressInfo.classList.add('active');
-
-                this.drawNextCard();
-            }
-
-            drawNextCard() {
-                this.currentCard = this.deckManager.draw();
-
-                if (this.currentCard) {
-                    this.dom.cardText.className = 'card-content';
-                    this.dom.cardText.textContent = this.currentCard.q;
-                    this.dom.cardAnswer.textContent = `${this.currentCard.q} = ${this.currentCard.a}`;
-
-                    this.dom.checkBtn.disabled = false;
-                    this.dom.correctBtn.disabled = true;
-                    this.dom.wrongBtn.disabled = true;
-                } else {
-                    this.endSession();
-                }
-
-                this.updateUI();
-            }
-
-            flipCard() {
-                if (this.currentCard && this.isSessionActive) {
-                    this.dom.card.classList.add('is-flipped');
-                    this.dom.checkBtn.disabled = true;
-                    this.dom.correctBtn.disabled = false;
-                    this.dom.wrongBtn.disabled = false;
-                }
-            }
-
-            handleGuess(isCorrect) {
-                this.stats.attempts++;
-
-                if (isCorrect) {
-                    this.stats.correct++;
-                } else {
-                    this.stats.incorrect++;
-                    this.deckManager.reinsertForReview(this.currentCard);
-                }
-
-                // First, flip the card back to the front
-                this.dom.card.classList.remove('is-flipped');
-
-                // Disable action buttons to prevent double-clicking while animating
-                this.dom.correctBtn.disabled = true;
-                this.dom.wrongBtn.disabled = true;
-
-                // Wait for the card to be halfway flipped (300ms) before changing the math fact text
-                setTimeout(() => {
-                    this.drawNextCard();
-                }, 300);
-            }
-
-            endSession() {
-                this.currentCard = null;
-                this.isSessionActive = false;
-
-                this.dom.card.classList.remove('in-session', 'is-flipped');
-                this.dom.progressContainer.style.visibility = 'hidden';
-                this.dom.progressInfo.classList.remove('active');
-
-                const accuracy = this.stats.attempts > 0 ? Math.round((this.stats.correct / this.stats.attempts) * 100) : 0;
-
-                this.dom.cardText.className = '';
-                this.dom.cardText.innerHTML = `
-                    <div class="end-session-message">
-                        <strong>Congratulations!</strong>
-                        <span>You solved ${this.stats.total} unique problems in ${this.stats.attempts} attempts (${accuracy}% accuracy).</span>
-                    </div>`;
-                this.dom.cardAnswer.textContent = '';
-
-                this.dom.checkBtn.disabled = true;
-                this.dom.correctBtn.disabled = true;
-                this.dom.wrongBtn.disabled = true;
-
-                if (typeof confetti === 'function') {
-                    confetti({ particleCount: 150, spread: 90, origin: { y: 0.6 } });
-                }
-            }
-
-            resetToInitialState() {
-                this.currentCard = null;
-                this.isSessionActive = false;
-
-                this.dom.card.classList.remove('is-flipped', 'in-session');
-                this.dom.cardText.className = 'card-content initial-card-text';
-                this.dom.cardText.innerHTML = `Welcome! <span class="initial-card-subtext">Configure your session below to begin.</span>`;
-                this.dom.cardAnswer.textContent = '';
-
-                this.dom.progressContainer.style.visibility = 'hidden';
-                this.dom.progressInfo.classList.remove('active');
-                this.dom.progressBar.style.width = '0%';
-
-                this.stats = { total: 0, attempts: 0, correct: 0, incorrect: 0 };
-                this.updateUI();
-
-                this.dom.checkBtn.disabled = true;
-                this.dom.correctBtn.disabled = true;
-                this.dom.wrongBtn.disabled = true;
-            }
-
-            updateUI() {
-                // Update stats
-                const remainingInDeck = this.isSessionActive && this.currentCard ? this.deckManager.remaining + 1 : 0;
-                this.dom.stats.total.textContent = this.stats.total;
-                this.dom.stats.remaining.textContent = remainingInDeck;
-                this.dom.stats.attempts.textContent = this.stats.attempts;
-                this.dom.stats.correct.textContent = this.stats.correct;
-                this.dom.stats.incorrect.textContent = this.stats.incorrect;
-                this.dom.stats.accuracy.textContent = this.stats.attempts > 0 ?
-                    `${Math.round((this.stats.correct / this.stats.attempts) * 100)}%` : '--';
-
-                // Update progress bar
-                if (this.stats.total > 0 && this.isSessionActive) {
-                    const cardsCompleted = this.stats.total - (this.deckManager.remaining + (this.currentCard ? 1 : 0));
-                    const progress = Math.max(0, Math.min(100, (cardsCompleted / this.stats.total) * 100));
-                    this.dom.progressBar.style.width = `${progress}%`;
-                    this.dom.progressInfo.textContent = `${Math.round(progress)}% complete`;
                 }
             }
         }
 
-        // Initialize App on Load
-        document.addEventListener('DOMContentLoaded', () => {
-            new FlashcardApp();
+        this._shuffle();
+        this._totalGenerated = this._cards.length;
+        return this._cards.length > 0;
+    }
+
+    draw() {
+        return this._cards.pop() ?? null;
+    }
+
+    reinsert(card) {
+        // Place 3 from the bottom so it reappears soon but not immediately
+        const idx = Math.max(0, this._cards.length - 3);
+        this._cards.splice(idx, 0, card);
+    }
+
+    _shuffle() {
+        for (let i = this._cards.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [this._cards[i], this._cards[j]] = [this._cards[j], this._cards[i]];
+        }
+    }
+}
+
+/* =============================================
+   STORAGE MANAGER
+   Thin wrapper around localStorage with safe JSON parsing.
+============================================= */
+const Storage = {
+    save(key, value) {
+        try { localStorage.setItem(key, JSON.stringify(value)); } catch (_) {}
+    },
+    load(key) {
+        try { return JSON.parse(localStorage.getItem(key) ?? 'null'); } catch (_) { return null; }
+    },
+    clear(key) {
+        try { localStorage.removeItem(key); } catch (_) {}
+    },
+};
+
+/* =============================================
+   FLASH CARD APP
+============================================= */
+class FlashcardApp {
+    constructor() {
+        this._deck    = new DeckManager();
+        this._card    = null;   // currently active card
+        this._active  = false;  // session in progress
+        this._locked  = false;  // prevent input during animation
+        this._uniqueSolved = 0;
+        this._stats   = { attempts: 0, correct: 0, incorrect: 0 };
+
+        this._dom = this._queryDOM();
+        this._buildNumberPills();
+        this._bindEvents();
+        this._initTheme();
+        this._loadSettings();
+        this._renderIdle();
+    }
+
+    /* ------------------------------------------
+       DOM REFERENCES
+    ------------------------------------------ */
+    _queryDOM() {
+        return {
+            card:           document.getElementById('card'),
+            cardFront:      document.getElementById('card-front'),
+            frontContent:   document.getElementById('card-front-content'),
+            backContent:    document.getElementById('card-back-content'),
+            btnFlip:        document.getElementById('btn-flip'),
+            btnCorrect:     document.getElementById('btn-correct'),
+            btnWrong:       document.getElementById('btn-wrong'),
+            btnStart:       document.getElementById('btn-start'),
+            btnReset:       document.getElementById('btn-reset'),
+            btnSelectAll:   document.getElementById('btn-select-all'),
+            btnClearAll:    document.getElementById('btn-clear-all'),
+            numberPills:    document.getElementById('number-pills'),
+            operationPills: document.getElementById('operation-pills'),
+            rangeMin:       document.getElementById('range-min'),
+            rangeMax:       document.getElementById('range-max'),
+            themeSelect:    document.getElementById('theme-select'),
+            progressLabel:  document.getElementById('progress-label'),
+            progressTrack:  document.getElementById('progress-track'),
+            progressFill:   document.getElementById('progress-fill'),
+            validationMsg:  document.getElementById('validation-msg'),
+            actionsHint:    document.getElementById('actions-hint'),
+            stats: {
+                total:     document.getElementById('stat-total'),
+                remaining: document.getElementById('stat-remaining'),
+                accuracy:  document.getElementById('stat-accuracy'),
+                attempts:  document.getElementById('stat-attempts'),
+                correct:   document.getElementById('stat-correct'),
+                incorrect: document.getElementById('stat-incorrect'),
+            },
+        };
+    }
+
+    /* ------------------------------------------
+       INITIALIZATION
+    ------------------------------------------ */
+    _buildNumberPills() {
+        const frag = document.createDocumentFragment();
+        for (let i = 0; i <= 12; i++) {
+            const cb  = document.createElement('input');
+            cb.type  = 'checkbox';
+            cb.id    = `num-${i}`;
+            cb.value = String(i);
+            const lbl     = document.createElement('label');
+            lbl.htmlFor   = `num-${i}`;
+            lbl.textContent = String(i);
+            frag.appendChild(cb);
+            frag.appendChild(lbl);
+        }
+        this._dom.numberPills.appendChild(frag);
+    }
+
+    _bindEvents() {
+        this._dom.btnFlip.addEventListener('click', () => this._flip());
+        this._dom.btnCorrect.addEventListener('click', () => this._handleGuess(true));
+        this._dom.btnWrong.addEventListener('click',   () => this._handleGuess(false));
+        this._dom.btnStart.addEventListener('click',   () => this._startSession());
+        this._dom.btnReset.addEventListener('click',   () => this._resetAll());
+        this._dom.btnSelectAll.addEventListener('click', () => this._toggleNumbers(true));
+        this._dom.btnClearAll.addEventListener('click',  () => this._toggleNumbers(false));
+        this._dom.themeSelect.addEventListener('change', e => this._applyTheme(e.target.value, true));
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', e => {
+            if (this._locked) return;
+            if (['INPUT', 'SELECT', 'TEXTAREA'].includes(document.activeElement.tagName)) return;
+            if (e.key === ' ' || e.key === 'Enter') {
+                e.preventDefault();
+                if (!this._dom.btnFlip.disabled) this._flip();
+            } else if (e.key === 'ArrowRight' || e.key === 'ArrowUp') {
+                e.preventDefault();
+                if (!this._dom.btnCorrect.disabled) this._handleGuess(true);
+            } else if (e.key === 'ArrowLeft' || e.key === 'ArrowDown') {
+                e.preventDefault();
+                if (!this._dom.btnWrong.disabled) this._handleGuess(false);
+            }
         });
-    </script>
+
+        // System theme change listener
+        window.matchMedia('(prefers-color-scheme: dark)')
+            .addEventListener('change', () => {
+                if (this._dom.themeSelect.value === 'system') this._applyTheme('system', false);
+            });
+    }
+
+    _initTheme() {
+        const saved = Storage.load(STORAGE_KEYS.theme) ?? 'system';
+        this._dom.themeSelect.value = saved;
+        this._applyTheme(saved, false);
+    }
+
+    _applyTheme(preference, save) {
+        if (save) Storage.save(STORAGE_KEYS.theme, preference);
+        const dark = preference === 'dark' ||
+            (preference === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+        document.body.className = dark ? 'dark' : 'light';
+    }
+
+    _loadSettings() {
+        const s = Storage.load(STORAGE_KEYS.settings);
+        if (!s) return;
+        if (Array.isArray(s.numbers)) {
+            s.numbers.forEach(n => {
+                const el = document.getElementById(`num-${n}`);
+                if (el) el.checked = true;
+            });
+        }
+        if (Array.isArray(s.ops)) {
+            s.ops.forEach(op => {
+                const el = this._dom.operationPills.querySelector(`input[value="${CSS.escape(op)}"]`);
+                if (el) el.checked = true;
+            });
+        }
+        if (s.rangeMin !== undefined) this._dom.rangeMin.value = s.rangeMin;
+        if (s.rangeMax !== undefined) this._dom.rangeMax.value = s.rangeMax;
+    }
+
+    _saveSettings(numbers, ops, rangeMin, rangeMax) {
+        Storage.save(STORAGE_KEYS.settings, { numbers, ops, rangeMin, rangeMax });
+    }
+
+    /* ------------------------------------------
+       SESSION CONTROL
+    ------------------------------------------ */
+    _startSession() {
+        const numbers  = this._getCheckedValues('#number-pills input:checked', parseInt);
+        const ops      = this._getCheckedValues('#operation-pills input:checked', v => v);
+        const rangeMin = parseInt(this._dom.rangeMin.value, 10);
+        const rangeMax = parseInt(this._dom.rangeMax.value, 10);
+
+        if (numbers.length === 0 || ops.length === 0) {
+            return this._showValidation('Please select at least one Focus Number and one Operation.');
+        }
+        if (isNaN(rangeMin) || isNaN(rangeMax) || rangeMin > rangeMax) {
+            return this._showValidation('Range Min must be a valid number ≤ Range Max.');
+        }
+        if (rangeMax > MAX_RANGE) {
+            return this._showValidation(`Range Max cannot exceed ${MAX_RANGE}.`);
+        }
+
+        this._hideValidation();
+        this._saveSettings(numbers, ops, rangeMin, rangeMax);
+
+        if (!this._deck.generate(numbers, rangeMin, rangeMax, ops)) {
+            return this._showValidation('No valid problems could be generated. Try adjusting your settings (e.g. avoid dividing by zero).');
+        }
+
+        this._active = true;
+        this._uniqueSolved = 0;
+        this._stats = { attempts: 0, correct: 0, incorrect: 0 };
+
+        this._dom.card.classList.remove('flipped');
+        this._dom.card.classList.add('active');
+        this._setProgressVisible(true);
+        this._drawNextCard();
+    }
+
+    _drawNextCard() {
+        this._card = this._deck.draw();
+
+        if (!this._card) {
+            this._endSession();
+            return;
+        }
+
+        this._dom.frontContent.className = 'card-equation';
+        this._dom.frontContent.textContent = this._card.q;
+        this._dom.backContent.textContent  = `${this._card.q} = ${this._card.a}`;
+
+        this._setButtons('pre-flip');
+        this._setHint('Space / Enter to flip');
+        this._updateStats();
+        this._updateProgress();
+    }
+
+    // Splits the DOM update across two moments to prevent the next card's answer
+    // from leaking through the back face mid-animation:
+    //   t=midpoint  → update front face only (perpendicular/invisible at this instant)
+    //   t=full flip → update back face (fully hidden behind front before content changes)
+    _drawNextCardAnimated() {
+        const next = this._deck.draw();
+
+        if (!next) {
+            this._endSession();
+            return;
+        }
+
+        this._card = next;
+
+        // Front face: safe to update now — it is invisible at the flip midpoint
+        this._dom.frontContent.className = 'card-equation';
+        this._dom.frontContent.textContent = next.q;
+
+        this._setButtons('pre-flip');
+        this._setHint('Space / Enter to flip');
+        this._updateStats();
+        this._updateProgress();
+
+        // Back face: wait for the remaining half of the flip animation to finish
+        // so the back is fully rotated out of view before its text changes
+        setTimeout(() => {
+            this._dom.backContent.textContent = `${next.q} = ${next.a}`;
+        }, FLIP_MIDPOINT_MS);
+    }
+
+    _flip() {
+        if (!this._card || !this._active || this._locked) return;
+        this._dom.card.classList.add('flipped');
+        this._setButtons('post-flip');
+        this._setHint('← Wrong  |  Correct →');
+    }
+
+    _handleGuess(isCorrect) {
+        if (this._locked) return;
+        this._locked = true;
+
+        this._stats.attempts++;
+        if (isCorrect) {
+            this._stats.correct++;
+            this._uniqueSolved++;
+        } else {
+            this._stats.incorrect++;
+            this._deck.reinsert(this._card);
+        }
+
+        // Flash the front face before flipping back
+        const flashClass = isCorrect ? 'flash-correct' : 'flash-wrong';
+        this._dom.cardFront.classList.add(flashClass);
+
+        this._setButtons('locked');
+
+        setTimeout(() => {
+            this._dom.card.classList.remove('flipped');
+            this._dom.cardFront.classList.remove(flashClass);
+        }, FLASH_DURATION_MS);
+
+        // At the flip midpoint the front face is invisible — update front content now.
+        // Back content is deferred inside _drawNextCardAnimated for the remaining half.
+        setTimeout(() => {
+            this._locked = false;
+            this._drawNextCardAnimated();
+        }, FLIP_MIDPOINT_MS);
+    }
+
+    _endSession() {
+        this._active = false;
+        this._card   = null;
+        this._locked = false;
+
+        this._dom.card.classList.remove('flipped', 'active');
+        this._setProgressVisible(false);
+        this._setButtons('locked');
+        this._setHint('');
+
+        const accuracy = this._stats.attempts > 0
+            ? Math.round((this._stats.correct / this._stats.attempts) * 100)
+            : 0;
+        const total = this._deck.totalGenerated;
+
+        this._dom.frontContent.className = '';
+        this._dom.frontContent.innerHTML = `
+            <div class="card-complete">
+                <div class="card-complete-title">🎉 Complete!</div>
+                <div class="card-complete-sub">
+                    ${total} unique problem${total !== 1 ? 's' : ''} solved<br>
+                    in ${this._stats.attempts} attempt${this._stats.attempts !== 1 ? 's' : ''}
+                    &mdash; ${accuracy}% accuracy
+                </div>
+            </div>`;
+        this._dom.backContent.textContent = '';
+
+        this._updateStats(true);
+
+        if (typeof confetti === 'function') {
+            confetti({ particleCount: 160, spread: 90, origin: { y: 0.6 } });
+        }
+    }
+
+    _resetAll() {
+        this._dom.numberPills.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = false);
+        this._dom.operationPills.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = false);
+        this._dom.rangeMin.value = 0;
+        this._dom.rangeMax.value = 12;
+        Storage.clear(STORAGE_KEYS.settings);
+        this._hideValidation();
+        this._active = false;
+        this._card   = null;
+        this._locked = false;
+        this._renderIdle();
+    }
+
+    /* ------------------------------------------
+       IDLE STATE
+    ------------------------------------------ */
+    _renderIdle() {
+        this._stats = { attempts: 0, correct: 0, incorrect: 0 };
+        this._uniqueSolved = 0;
+
+        this._dom.card.classList.remove('flipped', 'active');
+        this._setProgressVisible(false);
+        this._dom.progressFill.style.width = '0%';
+        this._setButtons('locked');
+        this._setHint('');
+
+        this._dom.frontContent.className = 'card-equation card-idle';
+        this._dom.frontContent.innerHTML = `Welcome!<small>Configure your session below to begin.</small>`;
+        this._dom.backContent.textContent = '';
+
+        this._updateStats();
+    }
+
+    /* ------------------------------------------
+       UI HELPERS
+    ------------------------------------------ */
+    _setButtons(state) {
+        // states: 'pre-flip' | 'post-flip' | 'locked'
+        const d = this._dom;
+        d.btnFlip.disabled    = state !== 'pre-flip';
+        d.btnCorrect.disabled = state !== 'post-flip';
+        d.btnWrong.disabled   = state !== 'post-flip';
+    }
+
+    _setHint(text) {
+        this._dom.actionsHint.textContent = text;
+    }
+
+    _setProgressVisible(visible) {
+        this._dom.progressLabel.classList.toggle('visible', visible);
+        this._dom.progressTrack.classList.toggle('visible', visible);
+    }
+
+    _updateStats(forceZeroRemaining = false) {
+        const d = this._dom.stats;
+        const total     = this._active ? this._deck.totalGenerated : 0;
+        const remaining = forceZeroRemaining ? 0
+            : (this._active && this._card ? this._deck.remaining + 1 : 0);
+
+        d.total.textContent     = total;
+        d.remaining.textContent = remaining;
+        d.attempts.textContent  = this._stats.attempts;
+        d.correct.textContent   = this._stats.correct;
+        d.incorrect.textContent = this._stats.incorrect;
+        d.accuracy.textContent  = this._stats.attempts > 0
+            ? `${Math.round((this._stats.correct / this._stats.attempts) * 100)}%`
+            : '--';
+
+        // ARIA live update for screen readers
+        const track = this._dom.progressTrack;
+        track.setAttribute('aria-valuenow', this._progressPercent());
+    }
+
+    _updateProgress() {
+        const pct = this._progressPercent();
+        const total = this._deck.totalGenerated;
+        this._dom.progressFill.style.width  = `${pct}%`;
+        this._dom.progressLabel.textContent =
+            `${this._uniqueSolved} of ${total} unique problem${total !== 1 ? 's' : ''} solved`;
+        this._dom.progressTrack.setAttribute('aria-valuenow', pct);
+    }
+
+    _progressPercent() {
+        const total = this._deck.totalGenerated;
+        return total > 0 ? Math.round((this._uniqueSolved / total) * 100) : 0;
+    }
+
+    _showValidation(msg) {
+        const el = this._dom.validationMsg;
+        el.textContent = msg;
+        el.classList.add('visible');
+    }
+
+    _hideValidation() {
+        this._dom.validationMsg.classList.remove('visible');
+    }
+
+    _toggleNumbers(state) {
+        this._dom.numberPills.querySelectorAll('input[type="checkbox"]')
+            .forEach(cb => cb.checked = state);
+    }
+
+    _getCheckedValues(selector, transform) {
+        return Array.from(document.querySelectorAll(selector)).map(el => transform(el.value));
+    }
+}
+
+/* =============================================
+   BOOT
+============================================= */
+document.addEventListener('DOMContentLoaded', () => new FlashcardApp());
+</script>
+
 </body>
 </html>
